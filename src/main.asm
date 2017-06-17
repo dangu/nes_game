@@ -9,84 +9,28 @@
 	.bank 0
 
 Start:
-	;this setups the PPU
+	;this sets up the PPU
 	lda #%00001000     
 	sta $2000          
 	lda #%00011110 
 	sta $2001
-;set to start of palette
-        lda #$3F
-        sta $2006
-        lda #$00
-        sta $2006
 
-	;these are the writes that setup the palette
-        lda #$01
-        sta $2007
-        lda #$02 
-        sta $2007
-        lda #$03
-        sta $2007
-        lda #$04
-        sta $2007
-        lda #$05
-        sta $2007
-        lda #$06
-        sta $2007
-        lda #$07
-        sta $2007
-        lda #$08
-        sta $2007
-        lda #$01     ;stop here
-        sta $2007
-        lda #$08
-        sta $2007
-        lda #$09
-        sta $2007
-        lda #$0A
-        sta $2007
-        lda #$01
-        sta $2007
-        lda #$0B
-        sta $2007
-        lda #$0C
-        sta $2007
-        lda #$0D
-        sta $2007
-        lda #$01    ;Start sprite colors
-        sta $2007
-        lda #$0D
-        sta $2007
-        lda #$08
-        sta $2007
-        lda #$2B
-        sta $2007
-        lda #$01
-        sta $2007
-        lda #$05
-        sta $2007
-        lda #$06
-        sta $2007
-        lda #$07
-        sta $2007
-        lda #$01
-        sta $2007
-        lda #$08
-        sta $2007
-        lda #$09
-        sta $2007
-        lda #$0A
-        sta $2007
-        lda #$01
-        sta $2007
-        lda #$0B
-        sta $2007
-        lda #$0C
-        sta $2007
-        lda #$0D
-        sta $2007
+    lda #$3F	;set to start of palette
+    sta $2006
+    lda #$00
+    sta $2006
+    
+    ldx	#$00
+loadpal:
+	lda titlepal, x		;loads a 32 byte pa
+	sta	$2007
+	inx
+	cpx	#$20
+	bne loadpal
 
-	
+
+titlepal: .incbin "test.pal"	;palette data
+
 Loop:
 	jmp Loop
 
