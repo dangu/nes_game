@@ -43,10 +43,24 @@ lda #$0D
         
 """
     f1=open(filename, 'w')
-    for x in range(32):
+    
+    # Palette memory according to https://wiki.nesdev.com/w/index.php/PPU_palettes
+    data = [0x0E, # 0x3F00    Universal background color
+            0x0E, 0x00, 0x00, 0x00, # 0x3F01-0x3F03    Background pal 0
+            0x00, 0x00, 0x00, 0x00, # 0x3F05-0x3F73    Background pal 1
+            0x00, 0x00, 0x00, 0x00, # 0x3F09-0x3F0B    Background pal 2
+            0x00, 0x00, 0x00, 0x00, # 0x3F0D-0x3F0F    Background pal 3
+            0x30, 0x31, 0x34, 0x2A, # 0x3F11-0x3F13    Sprite palette 0
+            0x00, 0x00, 0x00, 0x00, # 0x3F15-0x3F17    Sprite palette 1
+            0x00, 0x00, 0x00, 0x00, # 0x3F19-0x3F1B    Sprite palette 2
+            0x00, 0x00, 0x00, 0x00] # 0x3F1D-0x3F1F    Sprite palette 3
+
+
+    for x in data:
         f1.write(chr(x))
+    
     f1.close() 
 
 if __name__=="__main__":
-    writeBinary("test.chr")
+  #  writeBinary("test.chr")
     writeTestPalette("test.pal")
