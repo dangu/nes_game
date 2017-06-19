@@ -11,16 +11,16 @@
 Start:
 	jsr vwait
 	;this sets up the PPU
-	lda #%00001000     
+	lda #%00000000     
 	sta $2000          
 	lda #%00011110 
 	sta $2001
 	
+	jsr load_palette
+
 main_loop:
 	jsr vwait
-	jsr load_palette
-	jsr vwait
-	jsr load_palette2
+	jsr drawstuff
 	jmp main_loop
 halt:
 	jmp halt
@@ -68,22 +68,20 @@ loadpal:
 	lda #$6F
 	sta $2007
 
-
-	ldx #$00	;set $2004 to the start of SPR-RAM
-	stx $2003
-
+drawstuff:
     lda #$00	;Sprite memory location 0
-    sta $2004
+    sta $2003
     
     lda #128	;y-1
     sta $2004
-    lda #$01	; SPrite number
+    lda #$01	; Sprite number
     sta $2004	;write sprite pattern number
 ;    lda #%00000001       ;color bit
     lda #0       ;Attribute
     sta $2004
     lda #120	; x
     sta $2004
+    rts
 	  
 
     
