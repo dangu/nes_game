@@ -28,6 +28,8 @@ Start:
 	jsr init
 
 main_loop:
+	jsr joystick1
+	jsr calc_pos
 	jsr vwait
 	jsr drawstuff
 	jmp main_loop
@@ -82,6 +84,24 @@ loadpal:
 	sta $2007
 	lda #$6F
 	sta $2007
+
+; Calculate positions
+calc_pos:
+	lda joy1a
+	and #$01
+	beq not_a
+	ldx xpos
+	inx
+	stx xpos
+not_a:
+	lda joy1b
+	and #$01
+	beq not_b
+	ldx ypos
+	inx
+	stx ypos
+not_b:
+	rts
 
 drawstuff:
     lda #$00	;Sprite memory location 0
