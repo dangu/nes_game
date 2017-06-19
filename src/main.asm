@@ -4,9 +4,17 @@
         .ineschr    1 ;1 bank of chr ROM
         .inesmir    1
         .inesmap    0
-
-	.org $8000
+        
+	.bank 0        
+	.org $0000
+; Some variables
+joy1a:	.ds 1
+joy1b:	.ds 1
+xpos:	.ds 1
+ypos:	.ds 1
 	.bank 0
+	.org $8000
+
 
 Start:
 	jsr vwait
@@ -16,7 +24,8 @@ Start:
 	lda #%00011110 
 	sta $2001
 	
-	jsr load_palette
+	jsr load_palette2
+	jsr init
 
 main_loop:
 	jsr vwait
@@ -25,6 +34,12 @@ main_loop:
 halt:
 	jmp halt
 
+init:
+	lda #120
+	sta xpos		; Start with some default x y values
+	lda #127
+	sta ypos
+	rts
 	
 load_palette2:
     lda #$3F	;set to start of palette
@@ -72,14 +87,14 @@ drawstuff:
     lda #$00	;Sprite memory location 0
     sta $2003
     
-    lda #128	;y-1
+    lda ypos	;y-1
     sta $2004
     lda #$01	; Sprite number
     sta $2004	;write sprite pattern number
 ;    lda #%00000001       ;color bit
     lda #0       ;Attribute
     sta $2004
-    lda #120	; x
+    lda xpos	; x
     sta $2004
     rts
 	  
@@ -110,11 +125,33 @@ vwait_1:
 	lda $2002
 	bmi vwait_1 ;//wait for end of retrace
 	lda #0
-	sta $2005
+	sta $2005	; Set scroll and PPU base address
 	sta $2005
 	sta $2006
 	sta $2006	
 	rts
+	
+joystick1:
+	lda #$01
+	sta	$4016	;first strobe byte
+	lda #$00
+	sta	$4016	;second strobe byte
+
+	lda	$4016	; Read joy1a
+	sta joy1a
+	lda	$4016	; Read joy1b
+	sta joy1b
+	rts
+	
+;	set joy1a		& [$4016] 1
+;	set joy1b		& [$4016] 1
+;	set joy1select	& [$4016] 1
+;	set joy1start	& [$4016] 1
+;	set joy1up		& [$4016] 1
+;	set joy1down	& [$4016] 1
+;	set joy1left	& [$4016] 1
+;	set joy1right	& [$4016] 1
+;	return
 
 
 titlepal: .incbin "test.pal"	;palette data
