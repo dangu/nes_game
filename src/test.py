@@ -140,7 +140,7 @@ class NESSound:
             filename = "test.notes"
             f1 = open(filename, 'w')
             # Write header
-            f1.write("; Frequency values\n; ")
+            f1.write("; Frequency values [Hz]\n; ")
             for notename in names:
                 f1.write("%8s" %(notename))
             f1.write("\n")
@@ -161,7 +161,18 @@ class NESSound:
                     f1.write("%8s" %("%.1f " %(note['period'])))
                 f1.write("; Octave %d\n" %(note['octave']))
             f1.write("\n")
-            
+
+            f1.write("; Frequency error (actual - wanted)[Hz]\n; ")
+            for notename in names:
+                f1.write("%8s" %(notename))
+            f1.write("\n")
+            for octave in notes:
+                f1.write(";    ")
+                for note in octave:
+                    f1.write("%8s" %("%.1f " %(self.period2freq(round(note['period']))-note['freq'])))
+                f1.write("; Octave %d\n" %(note['octave']))
+            f1.write("\n")
+                        
             f1.write("; Period values, rounded nearest\n; ")
             for notename in names:
                 f1.write("%8s" %(notename))
@@ -172,6 +183,8 @@ class NESSound:
                     f1.write("%8s" %("%d " %(round(note['period']))))
                 f1.write("; Octave %d\n" %(note['octave']))
             f1.write("\n")
+            
+
             
             f1.close()
             
