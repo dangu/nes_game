@@ -26,6 +26,8 @@ Start:
 	
 	jsr load_palette2
 	jsr init
+	jsr test_sound
+	jmp halt
 
 main_loop:
 	jsr joystick1
@@ -59,11 +61,6 @@ loadpal:
 	cpx	#$20
 	bne loadpal
 	rts
-
-
-	lda #$00
-	sta $10		;Store local variable
-
 
 ;vwait:	
 ;	lda $2002    ;wait
@@ -173,6 +170,16 @@ joystick1:
 ;	set joy1right	& [$4016] 1
 ;	return
 
+test_sound:
+	lda	#%00000001
+	sta	$4015	; Enable square wave channel 1
+	lda #%10111111
+	sta $4000	;
+	lda #$C0
+	sta $4002
+	lda #$00
+	sta $4003
+	rts
 
 titlepal: .incbin "test.pal"	;palette data
 
