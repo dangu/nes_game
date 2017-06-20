@@ -178,10 +178,23 @@ class NESSound:
                 f1.write("%8s" %(notename))
             f1.write("\n")
             for octave in notes:
-                f1.write("    ")
+                f1.write(";    ")
                 for note in octave:
                     f1.write("%8s" %("%d " %(round(note['period']))))
                 f1.write("; Octave %d\n" %(note['octave']))
+            f1.write("\n")
+            
+            f1.write("; Period values, rounded nearest, hex\n;     ")
+            for notename in names:
+                f1.write("%8s" %(notename))
+            f1.write("\n")
+            for octave in notes:
+                row = "    .word "
+                for note in octave:
+                    row +="%8s" %("$%04X, " %(round(note['period'])))
+                row = row[:-2]  # Remove trailing ','
+                
+                f1.write("%s ; Octave %d\n" %(row, note['octave']))
             f1.write("\n")
             
 
