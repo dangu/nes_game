@@ -171,14 +171,32 @@ joystick1:
 ;	return
 
 test_sound:
-	lda	#%00000001
-	sta	$4015	; Enable square wave channel 1
+	lda	#%00000111
+	sta	$4015	; Enable square wave channel 1 and 2
 	lda #%10111111
 	sta $4000	;
 	lda #$C0
-	sta $4002
+	sta $4002	; Period $C000
 	lda #$00
 	sta $4003
+	
+	; Square 2
+	lda #%10111111
+	sta $4004	;
+	lda #$A9
+	sta $4006
+	lda #$00
+	sta $4007
+	
+	; Triangle
+	lda #%10000001
+	sta $4008
+	lda #$42
+	sta $400A
+	lda #$00
+	sta $400B	
+	
+	
 	rts
 
 titlepal: .incbin "test.pal"	;palette data
