@@ -109,11 +109,81 @@ class NESSound:
         12   C2"""
         factor = 2**(halftone/12.0)
         return factor
+    def generateNoteTable(self):
+        """Generate a note table that can be imported to
+        NESASM-programs
+        The definition is A4 = 440Hz
+        
+        C5 is 3 halftones above A4
+        C4 is 9 halftones below A4
+        C3 is 12 halftones below C4, 21 halftones below A4
+        C1 is 21+24=45 halftones below A4
+        """
+        names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+
+        freqA4 = 440 # [Hz]
+        # Loop from C1 to C5
+        notes = []
+        for octave in range(1, 9+1):
+            baseHalftoneNumber = 12*(octave-1) - 45 # C1 is 45 halftones below A4
+            notesInOctave = []
+            for halftoneNumberInOctave in range(0, 12):
+                halftoneNumber = baseHalftoneNumber + halftoneNumberInOctave
+                note = {}            
+                note['octave'] = octave
+                note['name'] = names[halftoneNumberInOctave]
+                note['freq'] = freqA4*self.halftoneFactor(halftoneNumber)
+                note['period'] = self.freq2period(note['freq'])
+                notesInOctave.append(note)
+            notes.append(notesInOctave)
+            
+            filename = "test.notes"
+            f1 = open(filename, 'w')
+            # Write header
+            f1.write("; Frequency values\n; ")
+            for notename in names:
+                f1.write("%8s" %(notename))
+            f1.write("\n")
+            for octave in notes:
+                f1.write(";    ")
+                for note in octave:
+                    f1.write("%8s" %("%.1f " %(note['freq'])))
+                f1.write("; Octave %d\n" %(note['octave']))
+            f1.write("\n")
+            
+            f1.write("; Period values, floating point\n; ")
+            for notename in names:
+                f1.write("%8s" %(notename))
+            f1.write("\n")
+            for octave in notes:
+                f1.write(";    ")
+                for note in octave:
+                    f1.write("%8s" %("%.1f " %(note['period'])))
+                f1.write("; Octave %d\n" %(note['octave']))
+            f1.write("\n")
+            
+            f1.write("; Period values, rounded nearest\n; ")
+            for notename in names:
+                f1.write("%8s" %(notename))
+            f1.write("\n")
+            for octave in notes:
+                f1.write("    ")
+                for note in octave:
+                    f1.write("%8s" %("%d " %(round(note['period']))))
+                f1.write("; Octave %d\n" %(note['octave']))
+            f1.write("\n")
+            
+            f1.close()
+            
+               
         
 def testSound():
     """Test the sound class"""
     cpuFreqNTSC = 1790000
     cpuFreqPAL  = 1662607
+    s = NESSound(cpuFrequency = cpuFreqNTSC)
+    s.generateNoteTable()
+    
     for note in range(24):
         s = NESSound(cpuFrequency = cpuFreqPAL)
         f = 220*s.halftoneFactor(note)
