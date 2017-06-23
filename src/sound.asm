@@ -1,3 +1,44 @@
+ .rsset $0300 ;sound engine variables will be on the $0300 page of RAM
+
+sound_disable_flag  .rs 1   ;a flag variable that keeps track of whether the sound engine is disabled or not.
+                            ;if set, sound_play_frame will return without doing anything.
+	.bank 0
+	.org $8000
+	
+sound_init:
+	lda	#$0F
+	sta $4015 ; Enable Square 1&2, Triangle and Noise
+
+	lda #$30
+	sta $4000	; Set Square 1 volume to 0
+	sta $4004	; Set Square 2 volume to 0
+	sta $400C	; Set Noise volume to 0
+	lda #$80
+	sta $4008	; Silence Triangle
+
+	lda #$00
+	sta sound_disable_flag	; Clear disable flag
+
+	rts
+	
+	
+	sound_disable:
+    lda #$00
+    sta $4015   ;disable all channels
+    lda #$01
+    sta sound_disable_flag  ;set disable flag
+    rts
+
+sound_load:
+    ;nothing here yet
+    rts
+ 
+sound_play_frame:
+    lda sound_disable_flag
+    bne .done       ;if disable flag is set, don't advance a frame
+    ;nothing here yet
+.done:
+    rts
 
 test_sound:
 	lda	#%00000111
