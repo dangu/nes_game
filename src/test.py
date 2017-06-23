@@ -136,72 +136,94 @@ class NESSound:
                 note['period'] = self.freq2period(note['freq'])
                 notesInOctave.append(note)
             notes.append(notesInOctave)
-            
-            filename = "test.notes"
-            f1 = open(filename, 'w')
-            # Write header
-            f1.write("; Frequency values [Hz]\n; ")
-            for notename in names:
-                f1.write("%8s" %(notename))
-            f1.write("\n")
-            for octave in notes:
-                f1.write(";    ")
-                for note in octave:
-                    f1.write("%8s" %("%.1f " %(note['freq'])))
-                f1.write("; Octave %d\n" %(note['octave']))
-            f1.write("\n")
-            
-            f1.write("; Period values, floating point\n; ")
-            for notename in names:
-                f1.write("%8s" %(notename))
-            f1.write("\n")
-            for octave in notes:
-                f1.write(";    ")
-                for note in octave:
-                    f1.write("%8s" %("%.1f " %(note['period'])))
-                f1.write("; Octave %d\n" %(note['octave']))
-            f1.write("\n")
+        
+        filename = "test.notes"
+        f1 = open(filename, 'w')
+        # Write header
+        f1.write("; Frequency values [Hz]\n; ")
+        for notename in names:
+            f1.write("%8s" %(notename))
+        f1.write("\n")
+        for octave in notes:
+            f1.write(";    ")
+            for note in octave:
+                f1.write("%8s" %("%.1f " %(note['freq'])))
+            f1.write("; Octave %d\n" %(note['octave']))
+        f1.write("\n")
+        
+        f1.write("; Period values, floating point\n; ")
+        for notename in names:
+            f1.write("%8s" %(notename))
+        f1.write("\n")
+        for octave in notes:
+            f1.write(";    ")
+            for note in octave:
+                f1.write("%8s" %("%.1f " %(note['period'])))
+            f1.write("; Octave %d\n" %(note['octave']))
+        f1.write("\n")
 
-            f1.write("; Frequency error (actual - wanted)[Hz]\n; ")
-            for notename in names:
-                f1.write("%8s" %(notename))
-            f1.write("\n")
-            for octave in notes:
-                f1.write(";    ")
-                for note in octave:
-                    f1.write("%8s" %("%.1f " %(self.period2freq(round(note['period']))-note['freq'])))
-                f1.write("; Octave %d\n" %(note['octave']))
-            f1.write("\n")
-                        
-            f1.write("; Period values, rounded nearest\n; ")
-            for notename in names:
-                f1.write("%8s" %(notename))
-            f1.write("\n")
-            for octave in notes:
-                f1.write(";    ")
-                for note in octave:
-                    f1.write("%8s" %("%d " %(round(note['period']))))
-                f1.write("; Octave %d\n" %(note['octave']))
-            f1.write("\n")
+        f1.write("; Frequency error (actual - wanted)[Hz]\n; ")
+        for notename in names:
+            f1.write("%8s" %(notename))
+        f1.write("\n")
+        for octave in notes:
+            f1.write(";    ")
+            for note in octave:
+                f1.write("%8s" %("%.1f " %(self.period2freq(round(note['period']))-note['freq'])))
+            f1.write("; Octave %d\n" %(note['octave']))
+        f1.write("\n")
+                    
+        f1.write("; Period values, rounded nearest\n; ")
+        for notename in names:
+            f1.write("%8s" %(notename))
+        f1.write("\n")
+        for octave in notes:
+            f1.write(";    ")
+            for note in octave:
+                f1.write("%8s" %("%d " %(round(note['period']))))
+            f1.write("; Octave %d\n" %(note['octave']))
+        f1.write("\n")
+        
+        f1.write("; Period values, rounded nearest, hex\n;     ")
+        for notename in names:
+            f1.write("%8s" %(notename))
+        f1.write("\n")
+        for octave in notes:
+            row = "    .word "
+            for note in octave:
+                row +="%8s" %("$%04X, " %(round(note['period'])))
+            row = row[:-2]  # Remove trailing ','
             
-            f1.write("; Period values, rounded nearest, hex\n;     ")
-            for notename in names:
-                f1.write("%8s" %(notename))
-            f1.write("\n")
-            for octave in notes:
-                row = "    .word "
-                for note in octave:
-                    row +="%8s" %("$%04X, " %(round(note['period'])))
-                row = row[:-2]  # Remove trailing ','
+            f1.write("%s ; Octave %d\n" %(row, note['octave']))
+        f1.write("\n")
+        
+        # Write the corresponding note defines, for example "Cs1" for C# first octave
+        f1.write("; Note defines\n")
+        offset = 0
+        for octave in notes:
+            for note in octave:
+                # C# => Cs
+                assemplerNoteName = note['name'].replace('#','s')
+                completeNoteName = "%s%d" %(assemplerNoteName, note['octave'])
+                f1.write("%-3s = $%02X\n" %(completeNoteName, offset))
                 
-                f1.write("%s ; Octave %d\n" %(row, note['octave']))
-            f1.write("\n")
-            
+                # Ugly hack to produce Db out of C#
+                if(note['name'].count('#')):
+                    # G# => Ab and not Hb
+                    if(note['name'][0]=='G'):
+                        completeNoteName2 = "Ab%d" %(note['octave'])
+                    else:
+                        completeNoteName2 = "%sb%d" %(chr(ord(note['name'][0])+1), note['octave'])
 
+                    f1.write("%-3s = $%02X\n" %(completeNoteName2, offset))
+                                            
+                
+                offset += 1
             
-            f1.close()
-            
-               
+        
+        
+        f1.close()
+           
         
 def testSound():
     """Test the sound class"""
