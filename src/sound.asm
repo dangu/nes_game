@@ -1,10 +1,13 @@
- .rsset $0300 ;sound engine variables will be on the $0300 page of RAM
+	.rsset $0300 ;sound engine variables will be on the $0300 page of RAM
 
 sound_disable_flag  .rs 1   ;a flag variable that keeps track of whether the sound engine is disabled or not.
                             ;if set, sound_play_frame will return without doing anything.
 	.bank 0
 	.org $8000
 	
+sound_data:
+    .byte C3, E3, G3, B3, C4, E4, G4, B4, C5 ; Cmaj7 (CEGB)
+
 sound_init:
 	lda	#$0F
 	sta $4015 ; Enable Square 1&2, Triangle and Noise
@@ -77,3 +80,5 @@ test_sound:
 	
 	
 	rts
+	
+note_table: .include "test.notes"  ;period values for notes

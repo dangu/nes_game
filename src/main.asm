@@ -39,11 +39,40 @@ halt:
 	jmp halt
 
 init:
+	sei			; Disable interrupts
+	cld			; Deactivate decimal mode (is there even one 
+				; in the NES processor?)
+	ldx	#$FF	; Set up stack 
+	txs			; Set stack pointer to $FF
+	inx			; X=0
+
+	jsr sound_init
+	
 	lda #120
 	sta xpos		; Start with some default x y values
 	lda #127
 	sta ypos
 	rts
+	
+	
+NMI:
+	pha			; push A to stack
+	txa
+	pha			; push X to stack
+	tya
+	pha			; push Y to stack
+
+	jsr sound_play_frame
+	
+	lda #$00
+;	sta sleeping	; clear sleeping flag
+
+	pla
+	tay			; pop Y from stack
+	pla
+	tax			; pop X from stack
+	pla			; pop A from stack
+	rti
 	
 load_palette2:
     lda #$3F	;set to start of palette
@@ -172,7 +201,6 @@ joystick1:
 
 
 titlepal: .incbin "test.pal"	;palette data
-note_table: .include "test.notes"  ;period values for notes
 	.include "sound.asm"
 
     	.bank 1
