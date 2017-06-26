@@ -1,4 +1,14 @@
-		;!The Header!
+	.list
+; Some explanation of the nesasm bank and org:
+; When using 1 bank of ROM (16 kB) and 1 bank of CHR (8 kB),
+; the nesasm bank 0 and 1 will be the ROM. Bank 2 is CHR.
+;
+; Within each bank, it is possible to set the .org. If it is
+; set to a multiple of 8 kB (0x2000) it will be the start of
+; the given bank [1].
+; 
+; References
+; [1]: https://forums.nesdev.com/viewtopic.php?f=10&t=10606
 
         .inesprg    1
         .ineschr    1 ;1 bank of chr ROM
@@ -16,6 +26,7 @@ ypos:	.ds 1
 	.org $8000
 
 
+	
 Start:
 	jsr vwait
 	;this sets up the PPU
