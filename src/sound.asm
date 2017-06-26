@@ -2,7 +2,7 @@
 
 sound_disable_flag  .rs 1   ;a flag variable that keeps track of whether the sound engine is disabled or not.
                             ;if set, sound_play_frame will return without doing anything.
-	.bank 0
+	.bank 1
 	.org $8000
 	
 sound_data:
