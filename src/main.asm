@@ -90,24 +90,26 @@ Start:
     
 
 	jsr init
-	cli			; Enable interrupts
-	jsr vwait
+
 	;this sets up the PPU
-	lda #%00000000     
+	lda #%10000000     ; Generate NMI
 	sta $2000          
 	lda #%00011110 
 	sta $2001
+	
+	cli				; Start interrupts
+	
 	
 	jsr load_palette2
 ;	jsr test_sound
 
 main_loop:
-	jmp main_loop
+
 	jsr joystick1
 	jsr calc_pos
 	jsr vwait
 	jsr drawstuff
-
+	jmp main_loop
 halt:
 	jmp halt
 
