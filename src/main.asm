@@ -28,6 +28,24 @@ ypos:	.ds 1
 
 	
 Start:
+	; Init stack
+	sei			; Disable interrupts
+	cld			; Deactivate decimal mode (is there even one 
+				; in the NES processor? No, but this helps with 
+				; compatibility with generic 6502 emulators
+				; (https://wiki.nesdev.com/w/index.php/Init_code))
+	ldx #$40
+	stx $4017	; Disable APU frame IRQ (https://wiki.nesdev.com/w/index.php/APU_Frame_Counter)
+	ldx	#$FF	; Set up stack 
+	txs			; Set stack pointer to $FF
+	inx			; X=0
+	stx $2000	; Disable NMI (https://wiki.nesdev.com/w/index.php/PPU_registers#PPUCTRL)
+	stx $2001	; Disable rendering (https://wiki.nesdev.com/w/index.php/PPU_registers#PPUMASK)
+	stx $4010	; Disable DMC interrupts (https://wiki.nesdev.com/w/index.php/APU_DMC)
+
+
+	jsr init
+	cli			; Enable interrupts
 	jsr vwait
 	;this sets up the PPU
 	lda #%00000000     
@@ -36,28 +54,21 @@ Start:
 	sta $2001
 	
 	jsr load_palette2
-	jsr init
-	jsr test_sound
-	jmp halt
+;	jsr test_sound
 
 main_loop:
+	jmp main_loop
 	jsr joystick1
 	jsr calc_pos
 	jsr vwait
 	jsr drawstuff
-	jmp main_loop
+
 halt:
 	jmp halt
 
 init:
-	sei			; Disable interrupts
-	cld			; Deactivate decimal mode (is there even one 
-				; in the NES processor?)
-	ldx	#$FF	; Set up stack 
-	txs			; Set stack pointer to $FF
-	inx			; X=0
 
-	jsr sound_init
+;	jsr sound_init
 	
 	lda #120
 	sta xpos		; Start with some default x y values
@@ -73,7 +84,7 @@ NMI:
 	tya
 	pha			; push Y to stack
 
-	jsr sound_play_frame
+;	jsr sound_play_frame
 	
 	lda #$00
 ;	sta sleeping	; clear sleeping flag
@@ -83,6 +94,15 @@ NMI:
 	pla
 	tax			; pop X from stack
 	pla			; pop A from stack
+	rti
+	
+; Just to see if the irq interrupt jumps here at all
+IRQ:
+	pha
+	lda $4015	; It seems we are stuck in this interrupt from the APU
+				; According to https://wiki.nesdev.com/w/index.php/APU_Frame_Counter
+				; reading $4015 will clear the interrupt
+	pla
 	rti
 	
 load_palette2:
@@ -216,9 +236,9 @@ titlepal: .incbin "test.pal"	;palette data
 
     	.bank 1
 	.org	$FFFA
-	.dw		0 ;(NMI_Routine)
+	.dw		NMI ;(NMI_Routine)
 	.dw		Start ;(Reset_Routine)
-	.dw		0 ;(IRQ_Routine)
+	.dw		IRQ ;(IRQ_Routine)
 
     .bank 2
     .org    $0000
