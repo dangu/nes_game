@@ -56,16 +56,16 @@ Start:
 
     ; First of two waits for vertical blank to make sure that the
     ; PPU has stabilized
-@vblankwait1:  
+.vblankwait1:  
     bit $2002
-    bpl @vblankwait1
+    bpl .vblankwait1
     
     ; We now have about 30,000 cycles to burn before the PPU stabilizes.
     ; One thing we can do with this time is put RAM in a known state.
     ; Here we fill it with $00, which matches what (say) a C compiler
     ; expects for BSS.  Conveniently, X is still 0.
     txa
-@clrmem:
+.clrmem:
     sta $000,x
     sta $100,x
     sta $300,x
@@ -79,14 +79,14 @@ Start:
     ; $EF-$FF, not 0, or you'll get a bunch of garbage sprites at (0, 0).
 
     inx
-    bne @clrmem
+    bne .clrmem
 
     ; Other things you can do between vblank waits are set up audio
     ; or set up other mapper registers.
    
-@vblankwait2:
+.vblankwait2:
     bit $2002
-    bpl @vblankwait2
+    bpl .vblankwait2
     
 
 	jsr init
