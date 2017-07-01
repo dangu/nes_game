@@ -20,13 +20,16 @@ NOISE     = $03
 
 sound_disable_flag  .rs 1   ;a flag variable that keeps track of whether the sound engine is disabled or not.
                             ;if set, sound_play_frame will return without doing anything.
+sound_temp1         .rs 1   ; Used for saving a temporary byte
+sound_temp2         .rs 1   ; Used for saving a temporary byte
 
 ;reserve 6 bytes each, one for each stream
-stream_curr_sound   .rs 6   ;what song/sfx # is this stream currently playing?    
+stream_curr_sound   .rs 6   ;what song/sfx # is this stream currently playing?  
+stream_status       .rs 6   ; Status  
 stream_channel      .rs 6   ;what channel is it playing on?
 stream_vol_duty     .rs 6   ;volume/duty settings for this stream
-stream_note_LO      .rs 6   ;low 8 bits of period for the current note playing on the stream
-stream_note_HI      .rs 6   ;high 3 bits of the note period
+stream_ptr_LO      .rs 6   ;low 8 bits of period for the current note playing on the stream
+stream_ptr_HI      .rs 6   ;high 3 bits of the note period
 
 	.bank 1
 	.org $8000
@@ -55,7 +58,7 @@ sound_init:
 	rts
 	
 	
-	sound_disable:
+sound_disable:
     lda #$00
     sta $4015   ;disable all channels
     lda #$01
@@ -63,6 +66,7 @@ sound_init:
     rts
 
 sound_load:
+    sta sound_temp1         ; Save the song numbre
     asl a                   ; Multiply the index with 2, as the table 
                             ; uses pointers with word length
     tay
@@ -73,8 +77,45 @@ sound_load:
     
     lda #$00
     lda [sound_ptr], y      ; Indirect addressing
+                            ; Read the first byte: # of streams
+    sta sound_temp2         ; Store in temporary byte
     ; Store something
     iny
+.loop
+    lda [sound_ptr], y      ; Stream number    
+    tax                     ; This is used as variable index
+    iny
+    
+    lda [sound_ptr], y      ; Status byte (1=enable, 0=disable)
+    sta stream_status, x    ; Here the variable index is used
+    iny
+    
+    lda [sound_ptr], y      ; Channel number
+    sta stream_channel, x
+    iny
+    
+    lda [sound_ptr], y      ; Initial duty and volume settings
+    sta stream_vol_duty, x
+    iny
+    
+    lda [sound_ptr], y      ; Pointer to stream data
+    sta stream_ptr_LO, x    ; Little endian, low byte first
+                            ; (AAARGH! This always confuses
+                            ; me: LITTLE ENDian = the smallest
+                            ; byte last? But no, of course it's
+                            ; the other way around...)
+    iny
+    
+    lda [sound_ptr], y
+    sta stream_ptr_HI, x    ; Now high byte of stream data pointer
+.next_stream:
+    iny
+    
+    lda sound_temp1         ; Song number
+    sta stream_curr_sound, x
+    
+    dec sound_temp2         ; The loop is counting # of streams
+    bne .loop
     rts
  
 sound_play_frame:
@@ -85,8 +126,6 @@ sound_play_frame:
 .loop
     lda stream_vol_duty, x  ; X is an offset to the current stream
 
-    lda stream_note_LO, x
-    
     inx             ; Next stream
     cpx #$06        ; Loop through all streams
                     ; Todo: Use a constant for this?
