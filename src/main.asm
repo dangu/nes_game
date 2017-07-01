@@ -108,7 +108,6 @@ main_loop:
 	jsr joystick1
 	jsr calc_pos
 	jsr vwait
-	jsr drawstuff
 	jmp main_loop
 halt:
 	jmp halt
@@ -131,9 +130,10 @@ NMI:
 	tya
 	pha			; push Y to stack
 
+	jsr drawstuff	; Do the drawing
+	
 ;	jsr sound_play_frame
 	
-	lda #$00
 ;	sta sleeping	; clear sleeping flag
 
 	pla
