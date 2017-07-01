@@ -36,6 +36,15 @@ Start:
 				; (https://wiki.nesdev.com/w/index.php/Init_code))
 	ldx #$40
 	stx $4017	; Disable APU frame IRQ (https://wiki.nesdev.com/w/index.php/APU_Frame_Counter)
+
+				; Fill stack area with a specific pattern for debugging
+	lda #$CD	; The pattern to use
+	ldx #$00
+.fill_stack:
+	sta $0100,x	; The stack is located at $0100-$01FF
+	inx
+	bne .fill_stack
+	
 	ldx	#$FF	; Set up stack 
 	txs			; Set stack pointer to $FF
 	inx			; X=0
@@ -67,7 +76,7 @@ Start:
     txa
 .clrmem:
     sta $000,x
-    sta $100,x
+;    sta $100,x
     sta $300,x
     sta $400,x
     sta $500,x
@@ -77,6 +86,7 @@ Start:
     ; We skipped $200,x on purpose.  Usually, RAM page 2 is used for the
     ; display list to be copied to OAM.  OAM needs to be initialized to
     ; $EF-$FF, not 0, or you'll get a bunch of garbage sprites at (0, 0).
+	; We also skipped $100, as the stack is already filled with a pattern
 
     inx
     bne .clrmem
@@ -132,7 +142,7 @@ NMI:
 
 	jsr drawstuff	; Do the drawing
 	
-;	jsr sound_play_frame
+;	jsr sound_play_frame ; Play sounds after the time critical drawing
 	
 ;	sta sleeping	; clear sleeping flag
 
