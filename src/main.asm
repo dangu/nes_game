@@ -18,10 +18,12 @@
 	.bank 0        
 	.org $0000
 ; Some variables
-joy1a:	.ds 1
-joy1b:	.ds 1
-xpos:	.ds 1
-ypos:	.ds 1
+joy1a:      .ds 1
+joy1b:      .ds 1
+xpos:       .ds 1
+ypos:       .ds 1
+sleeping:   .ds 1   ; Synchronizing the NMI with the main loop
+sound_ptr   .ds 2   ; Sound pointer (for indirect addressing)
 	.bank 0
 	.org $8000
 
@@ -143,8 +145,9 @@ NMI:
 	jsr drawstuff	; Do the drawing
 	
 ;	jsr sound_play_frame ; Play sounds after the time critical drawing
-	
-;	sta sleeping	; clear sleeping flag
+
+	lda #$00	
+	sta sleeping	; clear sleeping flag
 
 	pla
 	tay			; pop Y from stack
