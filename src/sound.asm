@@ -175,7 +175,7 @@ se_fetch_byte:
     sta stream_note_LO, x
     lda note_table+1, y
     sta stream_note_HI, x
-    lda sound_temp1         ; Restore Y
+    ldy sound_temp1         ; Restore Y
 
 ; Update stream pointer to point to the next byte
 ; in the data stream
