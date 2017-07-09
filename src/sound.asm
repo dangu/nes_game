@@ -22,6 +22,7 @@ sound_disable_flag  .rs 1   ;a flag variable that keeps track of whether the sou
                             ;if set, sound_play_frame will return without doing anything.
 sound_temp1         .rs 1   ; Used for saving a temporary byte
 sound_temp2         .rs 1   ; Used for saving a temporary byte
+sound_frame_counter .rs 1   ; Main sound frame counter
 
 ;reserve 6 bytes each, one for each stream
 stream_curr_sound   .rs 6   ;what song/sfx # is this stream currently playing?  
@@ -123,10 +124,21 @@ sound_play_frame:
     lda sound_disable_flag
     bne .done       ;if disable flag is set, don't advance a frame
     
+    inc sound_frame_counter
+    lda sound_frame_counter
+    cmp #$08    ; This is the tempo value
+    bne .done   ; Wait until the frame counter hits the above value
+
     ldx #$00    ; Start at stream 0 (MUSIC_SQ1)
 .loop
-    lda stream_vol_duty, x  ; X is an offset to the current stream
+    lda stream_status, x    ; Is stream enabled?
+    and #$01
+    beq .next_stream        ; If not enabled, skip to next stream
 
+    jsr se_fetch_byte       ; Read next byte from stream
+    jsr se_set_apu          ; Write the data to the APU
+
+.next_stream:
     inx             ; Next stream
     cpx #$06        ; Loop through all streams
                     ; Todo: Use a constant for this?
@@ -175,6 +187,38 @@ se_fetch_byte:
     sta stream_ptr_LO, x
     bcc .end
     inc stream_ptr_HI, x    ; 16 bit add
+.end:
+    rts
+
+; Write the stream data to the APU ports
+;
+se_set_apu:
+    lda stream_channel, x  ; Get the channel of this stream
+    asl a
+    asl a           ; Multiply by four as the channels are as follows:
+                    ; $4000: Pulse 1
+                    ; $4004: Pulse 2
+                    ;   ...
+                    ; (https://wiki.nesdev.com/w/index.php/APU_registers)
+                    
+    tay
+    lda stream_vol_duty, x
+    sta $4000, y            ; Write to the correct register
+                            ; (with an offset of Y)
+    lda stream_note_LO, x
+    sta $4002, y
+    lda stream_note_HI, x
+    sta $4003, y
+    
+    lda stream_channel, x
+    cmp #TRIANGLE
+    bcs .end        ; The triangle and noise channels do not have the
+                    ; sweep register 
+    lda #$08        ; Set the negate flag. Not sure why, but it is
+                    ; mentioned here:
+                    ; http://nintendoage.com/forum/messageview.cfm?catid=22&threadid=23452
+    sta $4001, y
+
 .end:
     rts
 
