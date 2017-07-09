@@ -34,7 +34,7 @@ stream_ptr_HI       .rs 6   ;high 3 bits of the note period
 stream_note_LO      .rs 6   ;low 8 bits of period
 stream_note_HI      .rs 6   ;high 3 bits of period
 	.bank 1
-	.org $8000
+	.org $A000
 	
 song_headers:
     .word song0_header

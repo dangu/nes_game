@@ -147,7 +147,7 @@ NMI:
 
 	jsr drawstuff	; Do the drawing
 	
-;	jsr sound_play_frame ; Play sounds after the time critical drawing
+	jsr sound_play_frame ; Play sounds after the time critical drawing
 
 	lda #$00	
 	sta sleeping	; clear sleeping flag
