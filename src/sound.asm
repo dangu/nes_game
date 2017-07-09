@@ -179,12 +179,18 @@ se_fetch_byte:
 
 ; Update stream pointer to point to the next byte
 ; in the data stream
+; This needs some extra explanation:
+; - stream_ptr_LO/HI points to the current byte in the stream
+; - stream_ptr_LO/HI is an array of as many bytes as there are streams
+; - X indexes the actual stream
+; - At this point in the code, Y holds the value #$00
+;   used for indirect addressing above
 .update_pointer:
-    iny
+    iny  ; Now Y=#$01
     tya
     clc
     adc stream_ptr_LO, x    ; Add Y to the LO pointer
-    sta stream_ptr_LO, x
+    sta stream_ptr_LO, x    ; This increases the stream pointer by 1
     bcc .end
     inc stream_ptr_HI, x    ; 16 bit add
 .end:
