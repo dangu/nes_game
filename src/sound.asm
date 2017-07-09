@@ -143,6 +143,9 @@ sound_play_frame:
     cpx #$06        ; Loop through all streams
                     ; Todo: Use a constant for this?
     bne .loop
+    
+    lda #$00
+    sta sound_frame_counter ; Reset frame counter
 .done:
     rts
 
