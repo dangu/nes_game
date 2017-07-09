@@ -129,7 +129,7 @@ halt:
 
 init:
 
-;	jsr sound_init
+	jsr sound_init
 	
 	lda #120
 	sta xpos		; Start with some default x y values
