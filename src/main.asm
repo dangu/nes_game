@@ -115,6 +115,9 @@ Start:
 	jsr load_palette2
 ;	jsr test_sound
 
+    ; Load song 0
+    lda #$00
+    jsr sound_load
 main_loop:
 
 	jsr joystick1

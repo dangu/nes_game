@@ -28,9 +28,10 @@ stream_curr_sound   .rs 6   ;what song/sfx # is this stream currently playing?
 stream_status       .rs 6   ; Status  
 stream_channel      .rs 6   ;what channel is it playing on?
 stream_vol_duty     .rs 6   ;volume/duty settings for this stream
-stream_ptr_LO      .rs 6   ;low 8 bits of period for the current note playing on the stream
-stream_ptr_HI      .rs 6   ;high 3 bits of the note period
-
+stream_ptr_LO       .rs 6   ;low 8 bits of period for the current note playing on the stream
+stream_ptr_HI       .rs 6   ;high 3 bits of the note period
+stream_note_LO      .rs 6   ;low 8 bits of period
+stream_note_HI      .rs 6   ;high 3 bits of period
 	.bank 1
 	.org $8000
 	
@@ -66,7 +67,7 @@ sound_disable:
     rts
 
 sound_load:
-    sta sound_temp1         ; Save the song numbre
+    sta sound_temp1         ; Save the song number
     asl a                   ; Multiply the index with 2, as the table 
                             ; uses pointers with word length
     tay
@@ -79,7 +80,6 @@ sound_load:
     lda [sound_ptr], y      ; Indirect addressing
                             ; Read the first byte: # of streams
     sta sound_temp2         ; Store in temporary byte
-    ; Store something
     iny
 .loop
     lda [sound_ptr], y      ; Stream number    
@@ -88,6 +88,7 @@ sound_load:
     
     lda [sound_ptr], y      ; Status byte (1=enable, 0=disable)
     sta stream_status, x    ; Here the variable index is used
+    beq .next_stream        ; If stream disabled, jump to next stream
     iny
     
     lda [sound_ptr], y      ; Channel number
@@ -131,6 +132,50 @@ sound_play_frame:
                     ; Todo: Use a constant for this?
     bne .loop
 .done:
+    rts
+
+; Fetch a byte from the data stream
+;
+;     
+; Input:
+;   X: Stream number
+se_fetch_byte:
+    lda stream_ptr_LO, x    ; Copy stream pointer into a zero page
+                            ; pointer variable
+    sta sound_ptr
+    lda stream_ptr_HI, x
+    sta sound_ptr+1
+    
+    ldy #$00
+    lda [sound_ptr], y      ; Read a byte using indirect mode
+    bpl .note               ; If <#$80, a note
+    cmp #$A0                ; If <#$A0, a note length
+    bcc .note_length
+.opcode:                    ; Else, an opcode
+    jmp .update_pointer
+.note_length:
+    jmp .update_pointer
+.note:
+    asl a                   ; Word indexing
+    sty sound_temp1         ; Save Y
+    tay
+    lda note_table, y       ; Low 8 bits of period
+    sta stream_note_LO, x
+    lda note_table+1, y
+    sta stream_note_HI, x
+    lda sound_temp1         ; Restore Y
+
+; Update stream pointer to point to the next byte
+; in the data stream
+.update_pointer:
+    iny
+    tya
+    clc
+    adc stream_ptr_LO, x    ; Add Y to the LO pointer
+    sta stream_ptr_LO, x
+    bcc .end
+    inc stream_ptr_HI, x    ; 16 bit add
+.end:
     rts
 
 test_sound:
