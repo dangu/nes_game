@@ -109,7 +109,7 @@ class NESSound:
         12   C2"""
         factor = 2**(halftone/12.0)
         return factor
-    def generateNoteTable(self):
+    def generateNoteTable(self, filename):
         """Generate a note table that can be imported to
         NESASM-programs
         The definition is A4 = 440Hz
@@ -137,7 +137,6 @@ class NESSound:
                 notesInOctave.append(note)
             notes.append(notesInOctave)
         
-        filename = "test.notes"
         f1 = open(filename, 'w')
         # Write header
         f1.write("; Frequency values [Hz]\n; ")
@@ -230,7 +229,7 @@ def testSound():
     cpuFreqNTSC = 1790000
     cpuFreqPAL  = 1662607
     s = NESSound(cpuFrequency = cpuFreqNTSC)
-    s.generateNoteTable()
+    s.generateNoteTable("sound_data.asm")
     
     for note in range(24):
         s = NESSound(cpuFrequency = cpuFreqPAL)

@@ -280,5 +280,5 @@ test_sound:
 	
 	rts
 	
-note_table: .include "test.notes"  ;period values for notes
+note_table: .include "sound_data.asm"  ;period values for notes
 song0: .include "song0.asm"
