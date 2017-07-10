@@ -212,3 +212,19 @@ A9  = $69
 As9 = $6A
 Bb9 = $6A
 B9  = $6B
+
+note_length_table:
+    .byte $01    ; 32nd note
+    .byte $02    ; 16th note
+    .byte $04    ; 8th note
+    .byte $08    ; quarter note
+    .byte $10    ; half note
+    .byte $20    ; whole note
+
+; Note length defines (for using defining a song)
+thirtysecond = $80
+sixteenth    = $81
+eighth       = $82
+quarter      = $83
+half         = $84
+whole        = $85

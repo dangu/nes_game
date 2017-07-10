@@ -219,8 +219,21 @@ class NESSound:
                 
                 offset += 1
             
+        f1.write("\nnote_length_table:\n")
+        f1.write("    .byte $01    ; 32nd note\n")
+        f1.write("    .byte $02    ; 16th note\n")
+        f1.write("    .byte $04    ; 8th note\n")
+        f1.write("    .byte $08    ; quarter note\n")
+        f1.write("    .byte $10    ; half note\n")
+        f1.write("    .byte $20    ; whole note\n\n")
         
-        
+        f1.write("; Note length defines (for using defining a song)\n")
+        f1.write("thirtysecond = $80\n")
+        f1.write("sixteenth    = $81\n")
+        f1.write("eighth       = $82\n")
+        f1.write("quarter      = $83\n")
+        f1.write("half         = $84\n")
+        f1.write("whole        = $85\n")
         f1.close()
            
         

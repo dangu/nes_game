@@ -31,6 +31,7 @@ stream_tempo        .rs 6   ; The tempo which is added to the ticker below
                             ; The ticker will wrap around at 0xFF and there
                             ; is the next tick
 stream_ticker_total .rs 6   ; This is the ticker that wraps around at 0xFF
+stream_note_length_counter .rs 6 ; When this counts to zero, the note ends
 stream_vol_duty     .rs 6   ;volume/duty settings for this stream
 stream_ptr_LO       .rs 6   ;low 8 bits of period for the current note playing on the stream
 stream_ptr_HI       .rs 6   ;high 3 bits of the note period
