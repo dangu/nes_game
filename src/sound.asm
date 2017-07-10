@@ -22,12 +22,15 @@ sound_disable_flag  .rs 1   ;a flag variable that keeps track of whether the sou
                             ;if set, sound_play_frame will return without doing anything.
 sound_temp1         .rs 1   ; Used for saving a temporary byte
 sound_temp2         .rs 1   ; Used for saving a temporary byte
-sound_frame_counter .rs 1   ; Main sound frame counter
 
 ;reserve 6 bytes each, one for each stream
 stream_curr_sound   .rs 6   ;what song/sfx # is this stream currently playing?  
 stream_status       .rs 6   ; Status  
 stream_channel      .rs 6   ;what channel is it playing on?
+stream_tempo        .rs 6   ; The tempo which is added to the ticker below
+                            ; The ticker will wrap around at 0xFF and there
+                            ; is the next tick
+stream_ticker_total .rs 6   ; This is the ticker that wraps around at 0xFF
 stream_vol_duty     .rs 6   ;volume/duty settings for this stream
 stream_ptr_LO       .rs 6   ;low 8 bits of period for the current note playing on the stream
 stream_ptr_HI       .rs 6   ;high 3 bits of the note period
@@ -110,6 +113,11 @@ sound_load:
     
     lda [sound_ptr], y
     sta stream_ptr_HI, x    ; Now high byte of stream data pointer
+    iny
+    
+    lda [sound_ptr], y
+    sta stream_tempo, x     ; Set inital tempo of the stream
+
 .next_stream:
     iny
     
@@ -120,21 +128,26 @@ sound_load:
     bne .loop
     rts
  
+; Play sound frame
+;
+; This subroutine is called every NMI and uses separate
+; tickers for the streams
 sound_play_frame:
     lda sound_disable_flag
     bne .done       ;if disable flag is set, don't advance a frame
     
-    inc sound_frame_counter
-    lda sound_frame_counter
-    cmp #$08    ; This is the tempo value
-    bne .done   ; Wait until the frame counter hits the above value
-
     ldx #$00    ; Start at stream 0 (MUSIC_SQ1)
 .loop
     lda stream_status, x    ; Is stream enabled?
     and #$01
     beq .next_stream        ; If not enabled, skip to next stream
 
+    lda stream_ticker_total, x  ; Get the old ticker value
+    clc
+    adc stream_tempo, x
+    sta stream_ticker_total, x  ; Increase ticker with tempo value
+    bcc .next_stream
+    
     jsr se_fetch_byte       ; Read next byte from stream
     jsr se_set_apu          ; Write the data to the APU
 
@@ -144,8 +157,6 @@ sound_play_frame:
                     ; Todo: Use a constant for this?
     bne .loop
     
-    lda #$00
-    sta sound_frame_counter ; Reset frame counter
 .done:
     rts
 
