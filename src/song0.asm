@@ -32,10 +32,10 @@ song0_header:
 
 ;these are the actual data streams that are pointed to in our stream headers.   
 song0_square1:
-    .byte A3, C4, E4, A4, C5, E5, A5 ;some notes.  A minor
+    .byte eighth, A3, C4, E4, A4, C5, E5, A5 ;some notes.  A minor
  
 song0_square2:
-    .byte A3, A3, A3, E4, A3, A3, E4 ;some notes to play on square 2
+    .byte quarter, A3, A3, A3, E4, A3, A3, E4 ;some notes to play on square 2
  
 song0_tri:
-    .byte A3, A3, A3, A3, A3, A3, A3 ;triangle data
+    .byte whole, A3, B3, C3, D3, E3, F3, G3 ;triangle data

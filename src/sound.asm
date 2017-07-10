@@ -32,6 +32,7 @@ stream_tempo        .rs 6   ; The tempo which is added to the ticker below
                             ; is the next tick
 stream_ticker_total .rs 6   ; This is the ticker that wraps around at 0xFF
 stream_note_length_counter .rs 6 ; When this counts to zero, the note ends
+stream_note_length  .rs 6   ; Saves the currently set note length for all notes in stream
 stream_vol_duty     .rs 6   ;volume/duty settings for this stream
 stream_ptr_LO       .rs 6   ;low 8 bits of period for the current note playing on the stream
 stream_ptr_HI       .rs 6   ;high 3 bits of the note period
@@ -119,6 +120,10 @@ sound_load:
     lda [sound_ptr], y
     sta stream_tempo, x     ; Set inital tempo of the stream
 
+    lda #$01
+    sta stream_note_length_counter, x ; This is to start playing the 
+                                      ; very first note immediately
+
 .next_stream:
     iny
     
@@ -149,6 +154,12 @@ sound_play_frame:
     sta stream_ticker_total, x  ; Increase ticker with tempo value
     bcc .next_stream
     
+    dec stream_note_length_counter, x ; Decrement note length counter
+    bne .next_stream    ; If counter is zero, the next note should start
+                    ; If not, this note is not finished
+    lda stream_note_length, x   ; Reload the note length counter
+    sta stream_note_length_counter, x
+    
     jsr se_fetch_byte       ; Read next byte from stream
     jsr se_set_apu          ; Write the data to the APU
 
@@ -174,6 +185,7 @@ se_fetch_byte:
     sta sound_ptr+1
     
     ldy #$00
+.fetch
     lda [sound_ptr], y      ; Read a byte using indirect mode
     bpl .note               ; If <#$80, a note
     cmp #$A0                ; If <#$A0, a note length
@@ -181,7 +193,21 @@ se_fetch_byte:
 .opcode:                    ; Else, an opcode
     jmp .update_pointer
 .note_length:
-    jmp .update_pointer
+    and #%01111111          ; Note length are defined as
+                            ; #$80, 81, ... 
+                            ; Use only the 7 msb to get a zero
+                            ; based index
+    sty sound_temp1         ; Save Y as it will be overwritten
+    tay
+    lda note_length_table, y
+    sta stream_note_length, x   ; Now using this note length
+                            ; for all future notes in this stream
+    sta stream_note_length_counter, x
+                            ; Now the stream_note_length_counter
+                            ; is reset with the new value
+    ldy sound_temp1         ; Restore Y
+    iny                     ; Get the next byte from the stream
+    jmp .fetch
 .note:
     asl a                   ; Word indexing
     sty sound_temp1         ; Save Y
