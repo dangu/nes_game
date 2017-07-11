@@ -38,6 +38,11 @@ stream_ptr_LO       .rs 6   ;low 8 bits of period for the current note playing o
 stream_ptr_HI       .rs 6   ;high 3 bits of the note period
 stream_note_LO      .rs 6   ;low 8 bits of period
 stream_note_HI      .rs 6   ;high 3 bits of period
+
+soft_apu_ports      .rs 16  ; This is used for buffering APU writes.
+                            ; The streams overwrite the port values
+                            ; in order. At the end of the update, the
+                            ; port data is flushed at once to the APU
 	.bank 1
 	.org $A000
 	
@@ -161,13 +166,15 @@ sound_play_frame:
     sta stream_note_length_counter, x
     
     jsr se_fetch_byte       ; Read next byte from stream
-    jsr se_set_apu          ; Write the data to the APU
+    jsr se_set_temp_ports   ; Buffer APU data
 
 .next_stream:
     inx             ; Next stream
     cpx #$06        ; Loop through all streams
                     ; Todo: Use a constant for this?
     bne .loop
+    
+    jsr se_set_apu          ; Write the data to the APU
     
 .done:
     rts
@@ -239,7 +246,30 @@ se_fetch_byte:
 
 ; Write the stream data to the APU ports
 ;
+; The registers $4009 and $400D are skipped. See
+; https://wiki.nesdev.com/w/index.php/APU for details
+; about the APU registers
 se_set_apu:
+    ldy #$0F
+.loop
+    cpy #$09    ; Compare Y
+    beq .skip   ; $4009 is unused
+    cpy #$0D
+    beq .skip   ; $400D is unused
+
+    lda soft_apu_ports, y
+    sta $4000, y
+.skip
+    dey
+    bpl .loop   ; End when $00 -> $FF
+
+    rts
+    
+
+; Write to temporary APU register buffer
+;
+; This data will be flushed to the APU later
+se_set_temp_ports:
     lda stream_channel, x  ; Get the channel of this stream
     asl a
     asl a           ; Multiply by four as the channels are as follows:
@@ -249,24 +279,23 @@ se_set_apu:
                     ; (https://wiki.nesdev.com/w/index.php/APU_registers)
                     
     tay
-    lda stream_vol_duty, x
-    sta $4000, y            ; Write to the correct register
+    lda stream_vol_duty, x  ; Volume
+    sta soft_apu_ports, y   ; Write to the correct register
                             ; (with an offset of Y)
-    lda stream_note_LO, x
-    sta $4002, y
-    lda stream_note_HI, x
-    sta $4003, y
-    
-    lda stream_channel, x
-    cmp #TRIANGLE
-    bcs .end        ; The triangle and noise channels do not have the
-                    ; sweep register 
-    lda #$08        ; Set the negate flag. Not sure why, but it is
+
+    lda #$08
+    sta soft_apu_ports+1, y ; Sweep 
+                    ; Set the negate flag. Not sure why, but it is
                     ; mentioned here:
                     ; http://nintendoage.com/forum/messageview.cfm?catid=22&threadid=23452
-    sta $4001, y
+            
 
-.end:
+    lda stream_note_LO, x
+    sta soft_apu_ports+2, y ; Period LO
+
+    lda stream_note_HI, x
+    sta soft_apu_ports+3, y ; Period HI
+
     rts
 
 test_sound:
