@@ -22,6 +22,11 @@ sound_disable_flag  .rs 1   ;a flag variable that keeps track of whether the sou
                             ;if set, sound_play_frame will return without doing anything.
 sound_temp1         .rs 1   ; Used for saving a temporary byte
 sound_temp2         .rs 1   ; Used for saving a temporary byte
+sound_sq1_old       .rs 1   ; The last value written to $4003
+sound_sq2_old       .rs 1   ; The last value written to $4004
+                            ; These values are used to avoid writing to these
+                            ; registers too often. See http://nintendoage.com/forum/messageview.cfm?catid=22&threadid=24885
+                            ; for details
 
 ;reserve 6 bytes each, one for each stream
 stream_curr_sound   .rs 6   ;what song/sfx # is this stream currently playing?  
@@ -57,12 +62,13 @@ sound_init:
 	lda	#$0F
 	sta $4015 ; Enable Square 1&2, Triangle and Noise
 
+se_silence:
 	lda #$30
-	sta $4000	; Set Square 1 volume to 0
-	sta $4004	; Set Square 2 volume to 0
-	sta $400C	; Set Noise volume to 0
+	sta soft_apu_ports	    ; Set Square 1 volume to 0
+	sta soft_apu_ports+4	; Set Square 2 volume to 0
+	sta soft_apu_ports+12	; Set Noise volume to 0
 	lda #$80
-	sta $4008	; Silence Triangle
+	sta soft_apu_ports+8	; Silence Triangle
 
 	lda #$00
 	sta sound_disable_flag	; Clear disable flag
@@ -250,6 +256,51 @@ se_fetch_byte:
 ; https://wiki.nesdev.com/w/index.php/APU for details
 ; about the APU registers
 se_set_apu:
+.square1:
+    lda soft_apu_ports+0
+    sta $4000
+    lda soft_apu_ports+1
+    sta $4001
+    lda soft_apu_ports+2
+    sta $4002
+    lda soft_apu_ports+3
+    cmp sound_sq1_old   ; Compare to the last write
+    beq .square2
+    sta $4003           ; Only write if different
+    sta sound_sq1_old   ; Save the value for $4003
+.square2:
+    lda soft_apu_ports+4
+    sta $4004
+    lda soft_apu_ports+5
+    sta $4005
+    lda soft_apu_ports+6
+    sta $4006
+    lda soft_apu_ports+7
+    cmp sound_sq2_old   ; Compare to the last write
+    beq .triangle
+    sta $4007           ; Only write if different
+    sta sound_sq2_old   ; Save the value for $4007
+.triangle:
+    lda soft_apu_ports+8
+    sta $4008
+    lda soft_apu_ports+10
+    sta $400A
+    lda soft_apu_ports+11
+    sta $400B
+.noise:
+    lda soft_apu_ports+12
+    sta $400C
+    lda soft_apu_ports+14
+    sta $400E
+    lda soft_apu_ports+15
+    sta $400F
+    rts
+    
+
+
+
+
+
     ldy #$0F
 .loop
     cpy #$09    ; Compare Y
