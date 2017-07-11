@@ -196,6 +196,10 @@ class NESSound:
             f1.write("%s ; Octave %d\n" %(row, note['octave']))
         f1.write("\n")
         
+        # Define a dummy period for a rest
+        f1.write("; Rest (dummy value)\n")
+        f1.write("    .word $0000\n\n")
+        
         # Write the corresponding note defines, for example "Cs1" for C# first octave
         f1.write("; Note defines\n")
         offset = 0
@@ -218,6 +222,9 @@ class NESSound:
                                             
                 
                 offset += 1
+        
+        f1.write("\n; The rest will have the index $%02X in the table:\n" %offset)
+        f1.write("rest = $%02X\n" %offset)
             
         f1.write("\nnote_length_table:\n")
         f1.write("    .byte $01    ; 32nd note\n")

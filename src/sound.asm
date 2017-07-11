@@ -231,6 +231,8 @@ se_fetch_byte:
     sta stream_note_HI, x
     ldy sound_temp1         ; Restore Y
 
+    jsr se_check_rest       ; Check if the last note actually was a rest
+
 ; Update stream pointer to point to the next byte
 ; in the data stream
 ; This needs some extra explanation:
@@ -248,6 +250,23 @@ se_fetch_byte:
     bcc .end
     inc stream_ptr_HI, x    ; 16 bit add
 .end:
+    rts
+
+; Check if the last note was a rest
+;
+; This is done by using the dummy note value "rest"
+se_check_rest:
+    lda [sound_ptr], y  ; Read the last note
+    cmp #rest           ; Check if it is equal to the rest value
+    bne .not_rest
+    lda stream_status, x
+    ora #%00000010      ; Set the rest bit in the stream status byte
+    bne .store
+.not_rest:
+    lda stream_status, x
+    and #%11111101      ; Clear the rest bit in the stream status byte
+.store:
+    sta stream_status, x
     rts
 
 ; Write the stream data to the APU ports
@@ -347,6 +366,21 @@ se_set_temp_ports:
     lda stream_note_HI, x
     sta soft_apu_ports+3, y ; Period HI
 
+    lda stream_status, x
+    and #%00000010
+    beq .done               ; Check if rest bit is cleared
+    lda stream_channel, x
+    cmp #TRIANGLE           ; Triangle is silenced with #$80
+    beq .tri
+    lda #$30
+    bne .store          ; There is no Branch Always so BNE is used instead
+                        ; (only 2 cycles compared to 3 or 5 for JMP
+                        ; http://www.masswerk.at/6502/6502_instruction_set.html)
+.tri:
+    lda #$80
+.store:
+    sta soft_apu_ports, y        
+.done
     rts
 
 test_sound:

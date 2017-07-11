@@ -58,6 +58,9 @@
     .word  $001A,  $0018,  $0017,  $0015,  $0014,  $0013,  $0012,  $0011,  $0010,  $000F,  $000E,  $000D ; Octave 8
     .word  $000C,  $000C,  $000B,  $000A,  $000A,  $0009,  $0008,  $0008,  $0007,  $0007,  $0006,  $0006 ; Octave 9
 
+; Rest (dummy value)
+    .word $0000
+
 ; Note defines
 C1  = $00
 Cs1 = $01
@@ -212,6 +215,9 @@ A9  = $69
 As9 = $6A
 Bb9 = $6A
 B9  = $6B
+
+; The rest will have the index $6C in the table:
+rest = $6C
 
 note_length_table:
     .byte $01    ; 32nd note
