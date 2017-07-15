@@ -171,15 +171,17 @@ sound_play_frame:
     clc
     adc stream_tempo, x
     sta stream_ticker_total, x  ; Increase ticker with tempo value
-    bcc .next_stream
+    bcc .set_buffer
     
     dec stream_note_length_counter, x ; Decrement note length counter
-    bne .next_stream    ; If counter is zero, the next note should start
+    bne .set_buffer    ; If counter is zero, the next note should start
                     ; If not, this note is not finished
     lda stream_note_length, x   ; Reload the note length counter
     sta stream_note_length_counter, x
     
     jsr se_fetch_byte       ; Read next byte from stream
+
+.set_buffer:
     jsr se_set_temp_ports   ; Buffer APU data
 
 .next_stream:
