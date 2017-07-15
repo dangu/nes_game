@@ -8,6 +8,7 @@ song0_header:
     .byte $01           ;status byte (stream enabled)
     .byte SQUARE_1      ;which channel
     .byte $BC           ;initial volume (C) and duty (10)
+    .byte $00           ; The first volume envelope
     .word song0_square1 ;pointer to stream
     .byte 06            ;initial tempo
  
@@ -15,6 +16,7 @@ song0_header:
     .byte $01           ;status byte (stream enabled)
     .byte SQUARE_2      ;which channel
     .byte $38           ;initial volume (8) and duty (00)
+    .byte $00           ; The first volume envelope
     .word song0_square2 ;pointer to stream
     .byte 06            ;initial tempo
  
@@ -22,6 +24,7 @@ song0_header:
     .byte $01           ;status byte (stream enabled)
     .byte TRIANGLE      ;which channel
     .byte $81           ;initial volume (on)
+    .byte $00           ; The first volume envelope
     .word song0_tri     ;pointer to stream
     .byte 06            ;initial tempo
  

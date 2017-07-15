@@ -234,3 +234,15 @@ eighth       = $82
 quarter      = $83
 half         = $84
 whole        = $85
+
+; Volume envelopes
+se_ve_1:
+    .byte $0F, $0E, $0D, $06, $03, $00
+    .byte $FF
+se_ve_2:
+    .byte $0F, $05, $0F, $05, $0F, $05
+    .byte $FF
+
+; Table of volume envelopes:
+volume_envelopes:
+   .word se_ve_1, se_ve_2

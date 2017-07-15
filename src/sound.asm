@@ -43,6 +43,8 @@ stream_ptr_LO       .rs 6   ;low 8 bits of period for the current note playing o
 stream_ptr_HI       .rs 6   ;high 3 bits of the note period
 stream_note_LO      .rs 6   ;low 8 bits of period
 stream_note_HI      .rs 6   ;high 3 bits of period
+stream_ve           .rs 6   ; Which volume envelope currently in use
+stream_ve_index     .rs 6   ; Current position within the volume envelope
 
 soft_apu_ports      .rs 16  ; This is used for buffering APU writes.
                             ; The streams overwrite the port values
@@ -99,24 +101,30 @@ sound_load:
     sta sound_temp2         ; Store in temporary byte
     iny
 .loop
-    lda [sound_ptr], y      ; Stream number    
+    lda [sound_ptr], y      ; Byte 0: Stream number    
     tax                     ; This is used as variable index
     iny
     
-    lda [sound_ptr], y      ; Status byte (1=enable, 0=disable)
+    lda [sound_ptr], y      ; Byte 1: Status byte (1=enable, 0=disable)
     sta stream_status, x    ; Here the variable index is used
     beq .next_stream        ; If stream disabled, jump to next stream
     iny
     
-    lda [sound_ptr], y      ; Channel number
+    lda [sound_ptr], y      ; Byte 2: Channel number
     sta stream_channel, x
     iny
     
-    lda [sound_ptr], y      ; Initial duty and volume settings
+    lda [sound_ptr], y      ; Byte 3: Initial duty and volume settings
     sta stream_vol_duty, x
     iny
     
-    lda [sound_ptr], y      ; Pointer to stream data
+    lda [sound_ptr], y      ; Byte 4: Volume envelope
+    sta stream_ve, x
+    lda #$00
+    sta stream_ve_index, x  ; Start from beginning of envelope
+    iny
+    
+    lda [sound_ptr], y      ; Byte 5: Pointer to stream data
     sta stream_ptr_LO, x    ; Little endian, low byte first
                             ; (AAARGH! This always confuses
                             ; me: LITTLE ENDian = the smallest
@@ -124,12 +132,12 @@ sound_load:
                             ; the other way around...)
     iny
     
-    lda [sound_ptr], y
-    sta stream_ptr_HI, x    ; Now high byte of stream data pointer
+    lda [sound_ptr], y      
+    sta stream_ptr_HI, x    ; Byte 6: Now high byte of stream data pointer
     iny
     
     lda [sound_ptr], y
-    sta stream_tempo, x     ; Set inital tempo of the stream
+    sta stream_tempo, x     ; Byte 7: Set inital tempo of the stream
 
     lda #$01
     sta stream_note_length_counter, x ; This is to start playing the 
@@ -252,6 +260,9 @@ se_fetch_byte:
 .end:
     rts
 
+
+
+
 ; Check if the last note was a rest
 ;
 ; This is done by using the dummy note value "rest"
@@ -339,6 +350,7 @@ se_set_apu:
 ; Write to temporary APU register buffer
 ;
 ; This data will be flushed to the APU later
+; X: Stream number
 se_set_temp_ports:
     lda stream_channel, x  ; Get the channel of this stream
     asl a
@@ -349,9 +361,8 @@ se_set_temp_ports:
                     ; (https://wiki.nesdev.com/w/index.php/APU_registers)
                     
     tay
-    lda stream_vol_duty, x  ; Volume
-    sta soft_apu_ports, y   ; Write to the correct register
-                            ; (with an offset of Y)
+    
+    jsr se_set_stream_volume ; Handle volume
 
     lda #$08
     sta soft_apu_ports+1, y ; Sweep 
@@ -382,6 +393,42 @@ se_set_temp_ports:
     sta soft_apu_ports, y        
 .done
     rts
+    
+; Set stream volume
+;
+; X: Stream number
+; Y: Index of soft APU ports
+; Y=0 => $4000, square 1
+; Y=4 => $4004, square 2 and so on
+se_set_stream_volume:
+    sty sound_temp1     ; Save Y index
+    lda stream_ve, x    ; Get the volume envelope index
+    asl a               ; Word addressing
+    tay
+    lda volume_envelopes, y ; Get the volume envelope low byte address
+    sta sound_ptr
+    lda volume_envelopes+1, y ; Get high byte of address
+    sta sound_ptr+1
+    
+.read_ve:
+    ldy stream_ve_index, x  ; Load current position in the envelope
+    lda [sound_ptr], y
+    cmp #$FF
+    bne .set_vol        ; Set volume if the end of the envelope is not reached
+    dec stream_ve_index, x ; If it was the end, repeat the last real volume value
+    jmp .read_ve            ; Note: This rewrites the actual index to point to the
+                            ; previous address
+.set_vol:
+    sta sound_temp2     ; Store the volume before destroying A
+    lda stream_vol_duty, x  ; Get current vol/duty setting
+    and #$F0            ; Zero out the old volume
+    ora sound_temp2     ; OR the new volume in
+    
+    ldy sound_temp1     ; Restore Y (soft_apu_ports index)
+    sta soft_apu_ports, y   ; Store the volume in the soft ports
+    inc stream_ve_index, x  ; Now point to the next index in the volume envelope
+    
+
 
 test_sound:
 	lda	#%00000111

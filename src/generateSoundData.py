@@ -79,6 +79,15 @@ class NESSound:
     def __init__(self, cpuFrequency):
         """Init"""
         self.cpuFrequency = cpuFrequency
+        self.f1 = None
+        
+    def open(self, filename):
+        """Open file for writing"""
+        self.f1 = open(filename, 'w')
+    
+    def close(self):
+        """Close output file"""
+        self.f1.close()
         
     def freq2period(self, f):
         """Convert a given frequency to period"""
@@ -109,7 +118,7 @@ class NESSound:
         12   C2"""
         factor = 2**(halftone/12.0)
         return factor
-    def generateNoteTable(self, filename):
+    def generateNoteTable(self):
         """Generate a note table that can be imported to
         NESASM-programs
         The definition is A4 = 440Hz
@@ -121,6 +130,8 @@ class NESSound:
         """
         names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
+        f1 = self.f1
+        
         freqA4 = 440 # [Hz]
         # Loop from C1 to C5
         notes = []
@@ -137,7 +148,7 @@ class NESSound:
                 notesInOctave.append(note)
             notes.append(notesInOctave)
         
-        f1 = open(filename, 'w')
+
         # Write header
         f1.write("; Frequency values [Hz]\n; ")
         for notename in names:
@@ -241,8 +252,43 @@ class NESSound:
         f1.write("quarter      = $83\n")
         f1.write("half         = $84\n")
         f1.write("whole        = $85\n")
-        f1.close()
+    
+    def generateVolumeEnvelopes(self):
+        """Create the volume envelopes"""
+        self.f1.write("\n; Volume envelopes\n")
+        
+        # Define some envelopes
+        envelopeDataList = [[15, 14, 13, 6, 3, 0],
+                        [15, 5, 15, 5, 15, 5],]
+        envelopeNumber = 1
+        envelopeNameList = []
+        
+        # Loop through all envelopes
+        for envelopeData in envelopeDataList:     
+            envelopeName = "se_ve_%d" %envelopeNumber
+            self.f1.write(envelopeName + ":\n")
+            envelopeNameList.append(envelopeName)
+            self.f1.write("    .byte ")
+            
+            envelopeDataString = ""
+            for data in envelopeData:
+                if not (0<=data<=0x0F):
+                    raise ValueError("Encountered an invalid volume value (%d=0x%02X)" %(data, data))
+                envelopeDataString += "$%02X, " %data
+            envelopeDataString = envelopeDataString[:-2] # Strip off the last ","
+            self.f1.write(envelopeDataString)
+            self.f1.write("\n    .byte $FF\n")
            
+            envelopeNumber += 1
+            
+        # Now create the table of volume envelopes
+        self.f1.write("\n; Table of volume envelopes:\n")
+        self.f1.write("volume_envelopes:\n")
+        envelopeTableString = ""
+        for envelopeName in envelopeNameList:
+            envelopeTableString += "%s, " %envelopeName
+        envelopeTableString = envelopeTableString[:-2] # Strip off the last ", "
+        self.f1.write("   .word %s\n" %envelopeTableString)
         
 def testSound():
     """Test the sound class"""
@@ -264,4 +310,15 @@ def testSound():
 if __name__=="__main__":
   #  writeBinary("test.chr")
     #writeTestPalette("test.pal")
-    testSound()
+    #testSound()
+    
+    cpuFreqNTSC = 1790000
+    cpuFreqPAL  = 1662607
+    s = NESSound(cpuFrequency = cpuFreqNTSC)
+    filename = "sound_data.asm"
+    s.open(filename)
+    s.generateNoteTable()
+    s.generateVolumeEnvelopes()
+    s.close()
+    
+    print "Finished generating data file " + filename
