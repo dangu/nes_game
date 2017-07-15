@@ -239,6 +239,9 @@ se_fetch_byte:
     sta stream_note_HI, x
     ldy sound_temp1         ; Restore Y
 
+    lda #$00
+    sta stream_ve_index, x  ; Start from beginning of volume envelope
+
     jsr se_check_rest       ; Check if the last note actually was a rest
 
 ; Update stream pointer to point to the next byte
@@ -377,21 +380,6 @@ se_set_temp_ports:
     lda stream_note_HI, x
     sta soft_apu_ports+3, y ; Period HI
 
-    lda stream_status, x
-    and #%00000010
-    beq .done               ; Check if rest bit is cleared
-    lda stream_channel, x
-    cmp #TRIANGLE           ; Triangle is silenced with #$80
-    beq .tri
-    lda #$30
-    bne .store          ; There is no Branch Always so BNE is used instead
-                        ; (only 2 cycles compared to 3 or 5 for JMP
-                        ; http://www.masswerk.at/6502/6502_instruction_set.html)
-.tri:
-    lda #$80
-.store:
-    sta soft_apu_ports, y        
-.done
     rts
     
 ; Set stream volume
@@ -420,14 +408,43 @@ se_set_stream_volume:
                             ; previous address
 .set_vol:
     sta sound_temp2     ; Store the volume before destroying A
+
+    cpx #TRIANGLE
+    bne .squares        ; If not triangle channel, go ahead
+    lda sound_temp2
+    bne .squares         ; Else, if volume not zero, go ahead
+    lda #$80
+    bmi .store_vol      ; Else, silence the channel with #$80
+
+.squares:    
     lda stream_vol_duty, x  ; Get current vol/duty setting
     and #$F0            ; Zero out the old volume
     ora sound_temp2     ; OR the new volume in
     
+.store_vol:
     ldy sound_temp1     ; Restore Y (soft_apu_ports index)
     sta soft_apu_ports, y   ; Store the volume in the soft ports
     inc stream_ve_index, x  ; Now point to the next index in the volume envelope
-    
+
+.rest_check:
+    ; Check the rest flag. If set, overwrite volume value
+    ; with silence
+    lda stream_status, x
+    and #%00000010
+    beq .done               ; Check if rest bit is cleared
+    lda stream_channel, x
+    cmp #TRIANGLE           ; Triangle is silenced with #$80
+    beq .tri
+    lda #$30
+    bne .store          ; There is no Branch Always so BNE is used instead
+                        ; (only 2 cycles compared to 3 or 5 for JMP
+                        ; http://www.masswerk.at/6502/6502_instruction_set.html)
+.tri:
+    lda #$80
+.store:
+    sta soft_apu_ports, y        
+.done    
+    rts
 
 
 test_sound:
