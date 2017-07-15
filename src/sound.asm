@@ -214,7 +214,24 @@ se_fetch_byte:
     cmp #$A0                ; If <#$A0, a note length
     bcc .note_length
 .opcode:                    ; Else, an opcode
-    jmp .update_pointer
+    cmp #$FF
+    bne .end
+    ; $FF: End of stream
+    lda stream_status, x
+    and #%11111110
+    sta stream_status, x    ; Clear enable flag
+
+    lda stream_channel, x
+    cmp #TRIANGLE
+    beq .silence_tri        ; Silence triangle in a special way
+    lda #$30                ; Sqares and noise silenced with #$30
+    bne .silence
+.silence_tri:
+    lda #$80                ; Triangle silenced with #$80
+.silence:
+    sta stream_vol_duty, x  ; Store silence value
+    jmp .update_pointer     ; Done. Todo: Won't this continue reading
+                            ; stream data outside of array?
 .note_length:
     and #%01111111          ; Note length are defined as
                             ; #$80, 81, ... 
