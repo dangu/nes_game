@@ -59,7 +59,7 @@ se_op_infinite_loop:
     lda [sound_ptr], y      ; The same for the HI byte
     sta stream_ptr_HI, x
     
-    sta sound_ptr+1         ; Update the stream data pointer. Now
+    sta sound_ptr+1         ; Update the stream data pointer.
     lda stream_ptr_LO, x
     sta sound_ptr           ; Now it points to the second argument of this
                             ; opcode
@@ -84,6 +84,43 @@ se_op_duty:
     lda [sound_ptr], y      ; Read the argument
     sta stream_vol_duty, x  ; Store the desired duty
     rts
+    
+; Sound opcode: Set finite loop counter
+;
+; Y: Desired number of loops
+se_op_set_loop1_counter:
+    lda [sound_ptr], y      ; Read the argument
+    sta stream_loop1, x     ; Store the desired number of loops
+    rts
+
+; Sound opcode: Set finite loop
+;
+; Y: Loop point
+se_op_loop1:
+    dec stream_loop1, x     ; Decrement loop counter
+    beq .last_iteration     ; If zero, end the loop
+.loop_back:
+    ; Note: The following code block is identical with the infinite loop
+    ; Let's call it instead
+    jmp se_op_infinite_loop
+;    lda [sound_ptr], y      ; Read LO byte of the
+;                            ; address argument
+;    sta stream_ptr_LO, x    ; Save as the new stream position
+;    iny
+;    lda [sound_ptr], y      ; The same for the HI byte
+;    sta stream_ptr_HI, x
+;    
+;    sta sound_ptr+1         ; Update the stream data pointer.
+;    lda stream_ptr_LO, x
+;    sta sound_ptr           ; Now it points to the second argument of this
+;                            ; opcode
+;    ldy #$FF                ; After opcodes return, Y is incremented.
+;                            ; This results in Y=0
+;    rts
+.last_iteration:
+    iny                     ; Skip the first argument. The next argument
+                            ; will be skipped upon return
+    rts
 
 ; Jump table for sound opcodes
 ;
@@ -92,12 +129,16 @@ se_op_duty:
 ; was translating A0, A1, ... into instructions which garbled
 ; the rest of the disassembly.
 sound_opcodes:
-    .word se_op_endsound        ; $A0
-    .word se_op_infinite_loop   ; $A1
-    .word se_op_change_ve       ; $A2
-    .word se_op_duty            ; $A3
+    .word se_op_endsound            ; $A0
+    .word se_op_infinite_loop       ; $A1
+    .word se_op_change_ve           ; $A2
+    .word se_op_duty                ; $A3
+    .word se_op_set_loop1_counter   ; $A4
+    .word se_op_loop1               ; $A5
 
-endsound        = $A0
-loop            = $A1
-volume_envelope = $A2
-duty            = $A3
+endsound            = $A0
+loop                = $A1
+volume_envelope     = $A2
+duty                = $A3
+set_loop1_counter   = $A4
+loop1               = $A5
