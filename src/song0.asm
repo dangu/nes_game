@@ -48,9 +48,14 @@ song0_square1:
     .byte duty, $F0
     .byte A5
     .byte duty, $B0
-    .byte set_loop1_counter, 13
+    .byte set_loop1_counter, 2
 .intro_loop:
     .byte sixteenth
+    .byte set_loop2_counter, 4
+.inner_loop:
+    .byte E4, G4
+    .byte loop2
+    .word .inner_loop
     .byte A3, C4, E4, A4
     .byte loop1
     .word .intro_loop

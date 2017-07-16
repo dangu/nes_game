@@ -85,7 +85,7 @@ se_op_duty:
     sta stream_vol_duty, x  ; Store the desired duty
     rts
     
-; Sound opcode: Set finite loop counter
+; Sound opcode: Set finite loop 1 counter
 ;
 ; Y: Desired number of loops
 se_op_set_loop1_counter:
@@ -93,7 +93,15 @@ se_op_set_loop1_counter:
     sta stream_loop1, x     ; Store the desired number of loops
     rts
 
-; Sound opcode: Set finite loop
+; Sound opcode: Set finite loop 2 counter
+;
+; Y: Desired number of loops
+se_op_set_loop2_counter:
+    lda [sound_ptr], y      ; Read the argument
+    sta stream_loop2, x     ; Store the desired number of loops
+    rts
+    
+; Sound opcode: Set finite loop 1
 ;
 ; Y: Loop point
 se_op_loop1:
@@ -122,6 +130,19 @@ se_op_loop1:
                             ; will be skipped upon return
     rts
 
+; Sound opcode: Set finite loop 2
+;
+; Y: Loop point
+se_op_loop2:
+    dec stream_loop2, x     ; Decrement loop counter
+    beq .last_iteration     ; If zero, end the loop
+    jmp se_op_infinite_loop
+
+.last_iteration:
+    iny                     ; Skip the first argument. The next argument
+                            ; will be skipped upon return
+    rts
+
 ; Jump table for sound opcodes
 ;
 ; The table is put here to not disturb the mednafen debugger.
@@ -135,6 +156,8 @@ sound_opcodes:
     .word se_op_duty                ; $A3
     .word se_op_set_loop1_counter   ; $A4
     .word se_op_loop1               ; $A5
+    .word se_op_set_loop2_counter   ; $A6
+    .word se_op_loop2               ; $A7
 
 endsound            = $A0
 loop                = $A1
@@ -142,3 +165,5 @@ volume_envelope     = $A2
 duty                = $A3
 set_loop1_counter   = $A4
 loop1               = $A5
+set_loop2_counter   = $A6
+loop2               = $A7

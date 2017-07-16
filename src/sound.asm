@@ -35,7 +35,8 @@ stream_channel      .rs 6   ;what channel is it playing on?
 stream_tempo        .rs 6   ; The tempo which is added to the ticker below
                             ; The ticker will wrap around at 0xFF and there
                             ; is the next tick
-stream_loop1        .rs 6   ; Loop counter, used for finite loops
+stream_loop1        .rs 6   ; Loop counter, used for finite loop 1
+stream_loop2        .rs 6   ; Loop counter, used for finite loop 2
 stream_ticker_total .rs 6   ; This is the ticker that wraps around at 0xFF
 stream_note_length_counter .rs 6 ; When this counts to zero, the note ends
 stream_note_length  .rs 6   ; Saves the currently set note length for all notes in stream
@@ -145,7 +146,8 @@ sound_load:
                                       ; very first note immediately
 
     lda #$00
-    sta stream_loop1, x     ; Clear finite loop counter
+    sta stream_loop1, x     ; Clear finite loop counters
+    sta stream_loop2, x
 
 .next_stream:
     iny
