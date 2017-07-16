@@ -247,6 +247,14 @@ se_fetch_byte:
     iny                     ; Get the next byte from the stream
     jmp .fetch
 .note:
+    sta sound_temp2         ; Save the note value
+    lda stream_channel, x   ; Is this the noise channel?
+    cmp #NOISE
+    bne .not_noise
+    jsr se_do_noise         ; Do noise
+    jmp .reset_ve           ; and skip the note table indexing
+.not_noise:
+    lda sound_temp2         ; Restore note value    
     clc
     adc stream_note_offset, x   ; Add note offset
     asl a                   ; Word indexing
@@ -258,6 +266,7 @@ se_fetch_byte:
     sta stream_note_HI, x
     ldy sound_temp1         ; Restore Y
 
+.reset_ve
     lda #$00
     sta stream_ve_index, x  ; Start from beginning of volume envelope
 
@@ -298,6 +307,27 @@ se_check_rest:
     and #%11111101      ; Clear the rest bit in the stream status byte
 .store:
     sta stream_status, x
+    rts
+    
+; Do noise
+;
+; The note values use bit 4 for defining Mode-0 or Mode-1:
+; $00-$0F => Mode-0
+; $10-$1F => Mode-1
+;
+; The Mode-1 notes are converted to $90-$9F before written to
+; the noise port $400E
+se_do_noise:
+    lda sound_temp2     ; Restore the note value
+    and #%00010000      ; Get bit 4
+    beq .mode0          ; bit 4 clear => Mode-0
+.mode1:
+    lda sound_temp2     ; Restore the note value
+    ora #%10000000      ; Set bit 7 to set Mode-1
+    sta sound_temp2
+.mode0:
+    lda sound_temp2     ; Restore the note value
+    sta stream_note_LO, x   ; Temp port that will be copied to $400E
     rts
 
 ; Write the stream data to the APU ports

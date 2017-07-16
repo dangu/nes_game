@@ -227,6 +227,15 @@ note_length_table:
     .byte $10    ; half note
     .byte $20    ; whole note
 
+    .byte $03    ; Dotted sixteenth
+    .byte $06    ; Dotted eighth
+    .byte $0C    ; Dotted quarter
+    .byte $18    ; Dotted half
+    .byte $30    ; Dotted whole
+
+    .byte $07    ; Modified quarter to fit after sixteenth triplets
+    .byte $14    ; 
+    .byte $0A   ; 
 ; Note length defines (for using defining a song)
 thirtysecond = $80
 sixteenth    = $81
@@ -234,6 +243,12 @@ eighth       = $82
 quarter      = $83
 half         = $84
 whole        = $85
+d_sixteenth  = $86  ; Dotted notes
+d_eighth     = $87
+d_quarter    = $88
+d_half       = $89
+d_whole      = $8A
+t_quarter    = $8B  ; Triplets
 
 ; Volume envelopes
 se_ve_1:
@@ -242,7 +257,10 @@ se_ve_1:
 se_ve_2:
     .byte $0F, $05, $0F, $05, $0F, $05
     .byte $FF
+se_ve_3:
+    .byte $0E, $09, $08, $06, $04, $03, $02, $01, $00
+    .byte $FF
 
 ; Table of volume envelopes:
 volume_envelopes:
-   .word se_ve_1, se_ve_2
+   .word se_ve_1, se_ve_2, se_ve_3

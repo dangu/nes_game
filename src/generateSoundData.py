@@ -244,7 +244,15 @@ class NESSound:
         f1.write("    .byte $08    ; quarter note\n")
         f1.write("    .byte $10    ; half note\n")
         f1.write("    .byte $20    ; whole note\n\n")
-        
+        f1.write("    .byte $03    ; Dotted sixteenth\n")
+        f1.write("    .byte $06    ; Dotted eighth\n")
+        f1.write("    .byte $0C    ; Dotted quarter\n")
+        f1.write("    .byte $18    ; Dotted half\n")
+        f1.write("    .byte $30    ; Dotted whole\n\n")
+        f1.write("    .byte $07    ; Modified quarter to fit after sixteenth triplets\n")
+        f1.write("    .byte $14    ; \n")
+        f1.write("    .byte $0A   ; \n")
+                           
         f1.write("; Note length defines (for using defining a song)\n")
         f1.write("thirtysecond = $80\n")
         f1.write("sixteenth    = $81\n")
@@ -252,14 +260,22 @@ class NESSound:
         f1.write("quarter      = $83\n")
         f1.write("half         = $84\n")
         f1.write("whole        = $85\n")
-    
+        f1.write("d_sixteenth  = $86  ; Dotted notes\n")
+        f1.write("d_eighth     = $87\n")
+        f1.write("d_quarter    = $88\n")
+        f1.write("d_half       = $89\n")
+        f1.write("d_whole      = $8A\n")
+        f1.write("t_quarter    = $8B  ; Triplets\n")
+             
     def generateVolumeEnvelopes(self):
         """Create the volume envelopes"""
         self.f1.write("\n; Volume envelopes\n")
         
         # Define some envelopes
         envelopeDataList = [[15, 14, 13, 6, 3, 0],
-                        [15, 5, 15, 5, 15, 5],]
+                        [15, 5, 15, 5, 15, 5],
+                        [14,9,8,6,4,3,2,1,0],  # Drum decay
+                        ]
         envelopeNumber = 1
         envelopeNameList = []
         

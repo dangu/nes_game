@@ -10,7 +10,7 @@ song0_header:
     .byte $BC           ;initial volume (C) and duty (10 => B0)
     .byte $00           ; The first volume envelope
     .word song0_square1 ;pointer to stream
-    .byte 53            ;initial tempo
+    .byte $53            ;initial tempo
  
     .byte MUSIC_SQ2     ;which stream
     .byte $01           ;status byte (stream enabled)
@@ -18,7 +18,7 @@ song0_header:
     .byte $38           ;initial volume (8) and duty (00 => 30)
     .byte $00           ; The first volume envelope
     .word song0_square2 ;pointer to stream
-    .byte 53            ;initial tempo
+    .byte $53            ;initial tempo
  
     .byte MUSIC_TRI     ;which stream
     .byte $01           ;status byte (stream enabled)
@@ -26,12 +26,15 @@ song0_header:
     .byte $81           ;initial volume (on)
     .byte $00           ; The first volume envelope
     .word song0_tri     ;pointer to stream
-    .byte 53            ;initial tempo
+    .byte $53            ;initial tempo
  
     .byte MUSIC_NOI     ;which stream
-    .byte $00           ;disabled.  We will have our load routine skip the
-                        ;   rest of the reads if the status byte disables the stream.
-                        ;   We are disabling Noise because we haven't covered it yet.
+    .byte $01           ; Enabled
+    .byte NOISE         ; Which channel
+    .byte $30           ; Initial volume_duty
+    .byte $02           ; Drum volume envelope
+    .word song0_noise   ; Pointer to the sound data stream
+    .byte $53           ; Tempo
 
 ;these are the actual data streams that are pointed to in our stream headers.   
 song0_square1:
@@ -71,3 +74,12 @@ song0_square2:
 song0_tri:
     .byte whole, A3, B3, C3, D3, E3, F3, G3 ;triangle data
     .byte endsound
+    
+song0_noise:
+    .byte eighth, $04                   ;this song only uses drum 04 (Mode-0, Sound Type 4) for a snare
+    .byte sixteenth, $04, $04, $04
+    .byte d_eighth, $04
+    .byte sixteenth, $04, $04, $04, $04
+    .byte eighth, $04, $04
+    .byte loop
+    .word song0_noise
