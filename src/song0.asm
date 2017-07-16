@@ -7,7 +7,7 @@ song0_header:
     .byte MUSIC_SQ1     ;which stream
     .byte $01           ;status byte (stream enabled)
     .byte SQUARE_1      ;which channel
-    .byte $BC           ;initial volume (C) and duty (10)
+    .byte $BC           ;initial volume (C) and duty (10 => B0)
     .byte $00           ; The first volume envelope
     .word song0_square1 ;pointer to stream
     .byte 53            ;initial tempo
@@ -15,7 +15,7 @@ song0_header:
     .byte MUSIC_SQ2     ;which stream
     .byte $01           ;status byte (stream enabled)
     .byte SQUARE_2      ;which channel
-    .byte $38           ;initial volume (8) and duty (00)
+    .byte $38           ;initial volume (8) and duty (00 => 30)
     .byte $00           ; The first volume envelope
     .word song0_square2 ;pointer to stream
     .byte 53            ;initial tempo
@@ -38,7 +38,16 @@ song0_square1:
     .byte sixteenth, A3, rest, C4, E4, A4
     .byte volume_envelope, 1
     .byte C5
-    .byte volume_envelope, 0, E5, A5 ;some notes.  A minor
+    .byte volume_envelope, 0, E5
+    .byte quarter
+    .byte A5
+    .byte duty, $30
+    .byte A5
+    .byte duty, $B0
+    .byte A5
+    .byte duty, $F0
+    .byte A5
+    .byte duty, $B0
     .byte loop
     .word song0_square1
 song0_square2:
