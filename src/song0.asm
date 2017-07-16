@@ -80,6 +80,9 @@ song0_noise:
     .byte sixteenth, $04, $04, $04
     .byte d_eighth, $04
     .byte sixteenth, $04, $04, $04, $04
-    .byte eighth, $04, $04
+    .byte eighth, $00, $01, $02, $03, $04, $05, $06, $07, $08, $09
+    .byte eighth, $0A, $0B, $0C, $0D, $0E, $0F
+    .byte eighth, $00, $11, $12, $13, $14, $15, $16, $17, $18, $19
+    .byte eighth, $1A, $1B, $1C, $1D, $1E, $1F
     .byte loop
     .word song0_noise
