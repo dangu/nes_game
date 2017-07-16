@@ -24,6 +24,7 @@ xpos:       .ds 1
 ypos:       .ds 1
 sleeping:   .ds 1   ; Synchronizing the NMI with the main loop
 sound_ptr   .ds 2   ; Sound pointer (for indirect addressing)
+jmp_ptr     .ds 2   ; Jump pointer for sound opcode jump table
 	.bank 0
 	.org $8000
 
