@@ -66,6 +66,24 @@ se_op_infinite_loop:
     ldy #$FF                ; After opcodes return, Y is incremented.
                             ; This results in Y=0
     rts    
+    
+; Sound opcode: Change volume envelope
+;
+; Y: Desired volume envelope
+se_op_change_ve:
+    lda [sound_ptr], y      ; Read the argument
+    sta stream_ve, x        ; Store the desired volume envelope
+    lda #$00
+    sta stream_ve_index, x  ; Start from the beginning of the envelope
+    rts
+    
+; Sound opcode: Change duty cycle
+;
+; Y: Desired duty
+se_op_duty:
+    lda [sound_ptr], y      ; Read the argument
+    sta stream_vol_duty, x  ; Store the desired duty
+    rts
 
 ; Jump table for sound opcodes
 ;
@@ -76,6 +94,10 @@ se_op_infinite_loop:
 sound_opcodes:
     .word se_op_endsound        ; $A0
     .word se_op_infinite_loop   ; $A1
+    .word se_op_change_ve       ; $A2
+    .word se_op_duty            ; $A3
 
-endsound    = $A0
-loop        = $A1
+endsound        = $A0
+loop            = $A1
+volume_envelope = $A2
+duty            = $A3

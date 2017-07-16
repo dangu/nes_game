@@ -35,7 +35,10 @@ song0_header:
 
 ;these are the actual data streams that are pointed to in our stream headers.   
 song0_square1:
-    .byte sixteenth, A3, rest, C4, E4, A4, C5, E5, A5 ;some notes.  A minor
+    .byte sixteenth, A3, rest, C4, E4, A4
+    .byte volume_envelope, 1
+    .byte C5
+    .byte volume_envelope, 0, E5, A5 ;some notes.  A minor
     .byte loop
     .word song0_square1
 song0_square2:
