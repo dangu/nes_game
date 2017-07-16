@@ -112,7 +112,6 @@ Start:
 	
 	cli				; Start interrupts
 	
-	
 	jsr load_palette2
 ;	jsr test_sound
 
@@ -120,7 +119,6 @@ Start:
     lda #$00
     jsr sound_load
 main_loop:
-
 	jsr joystick1
 	jsr calc_pos
 	jsr vwait
@@ -130,7 +128,7 @@ halt:
 
 init:
 
-	jsr sound_init
+;	jsr sound_init
 	
 	lda #120
 	sta xpos		; Start with some default x y values
@@ -175,8 +173,6 @@ load_palette2:
     lda #$00
     sta $2006
     
-    
-
     ldx	#$00
 loadpal:
 	lda titlepal, x		;loads a 32 byte palette
