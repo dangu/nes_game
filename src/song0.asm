@@ -35,6 +35,7 @@ song0_header:
 
 ;these are the actual data streams that are pointed to in our stream headers.   
 song0_square1:
+    .byte set_note_offset, 0
     .byte sixteenth, A3, rest, C4, E4, A4
     .byte volume_envelope, 1
     .byte C5
@@ -54,6 +55,7 @@ song0_square1:
     .byte set_loop2_counter, 4
 .inner_loop:
     .byte E4, G4
+    .byte adjust_note_offset, 1
     .byte loop2
     .word .inner_loop
     .byte A3, C4, E4, A4

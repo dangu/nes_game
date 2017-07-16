@@ -143,6 +143,25 @@ se_op_loop2:
                             ; will be skipped upon return
     rts
 
+; Sound opcode: Set note offset
+;
+; This is used for transposing the notes
+; Y: Desired note offset
+se_op_set_note_offset:
+    lda [sound_ptr], y          ; Read the argument
+    sta stream_note_offset, x   ; Store the desired note offset
+    rts
+
+; Sound opcode: Adjust note offset
+;
+; Y: The offset to be added to the current offset
+se_op_adjust_note_offset:
+    lda [sound_ptr], y          ; Read the argument
+    clc
+    adc stream_note_offset, x   ; Add to the current offset
+    sta stream_note_offset, x   ; Store it
+    rts
+
 ; Jump table for sound opcodes
 ;
 ; The table is put here to not disturb the mednafen debugger.
@@ -158,6 +177,8 @@ sound_opcodes:
     .word se_op_loop1               ; $A5
     .word se_op_set_loop2_counter   ; $A6
     .word se_op_loop2               ; $A7
+    .word se_op_set_note_offset     ; $A8
+    .word se_op_adjust_note_offset  ; $A9
 
 endsound            = $A0
 loop                = $A1
@@ -167,3 +188,5 @@ set_loop1_counter   = $A4
 loop1               = $A5
 set_loop2_counter   = $A6
 loop2               = $A7
+set_note_offset     = $A8
+adjust_note_offset  = $A9

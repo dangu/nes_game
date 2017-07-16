@@ -45,6 +45,7 @@ stream_ptr_LO       .rs 6   ;low 8 bits of period for the current note playing o
 stream_ptr_HI       .rs 6   ;high 3 bits of the note period
 stream_note_LO      .rs 6   ;low 8 bits of period
 stream_note_HI      .rs 6   ;high 3 bits of period
+stream_note_offset  .rs 6   ; Note offset, used for transposing
 stream_ve           .rs 6   ; Which volume envelope currently in use
 stream_ve_index     .rs 6   ; Current position within the volume envelope
 
@@ -148,6 +149,8 @@ sound_load:
     lda #$00
     sta stream_loop1, x     ; Clear finite loop counters
     sta stream_loop2, x
+    
+    sta stream_note_offset, x   ; Clear note offset
 
 .next_stream:
     iny
@@ -244,6 +247,8 @@ se_fetch_byte:
     iny                     ; Get the next byte from the stream
     jmp .fetch
 .note:
+    clc
+    adc stream_note_offset, x   ; Add note offset
     asl a                   ; Word indexing
     sty sound_temp1         ; Save Y
     tay
