@@ -121,6 +121,7 @@ Start:
 main_loop:
 	jsr joystick1
 	jsr calc_pos
+    jsr update_dma_mem
 	jsr vwait
 	jmp main_loop
 halt:
@@ -136,6 +137,20 @@ init:
 	sta ypos
 	rts
 	
+; Update DMA memory
+;
+; Write the new data to DMA, which will be transferred
+; with the next NMI
+update_dma_mem:
+    lda xpos
+    sta $200
+    lda ypos
+    sta $0203
+    lda #$01
+    sta $0201
+    lda #$00
+    sta $0202
+    rts
 	
 NMI:
 	pha			; push A to stack
@@ -144,11 +159,16 @@ NMI:
 	tya
 	pha			; push Y to stack
 
-	jsr drawstuff	; Do the drawing
-	
+;	jsr drawstuff	; Do the drawing
+
+    lda #$00
+    sta $2003   ; Low byte of DMA memory address
+    lda #$02        
+    sta $4014   ; High byte of DMA memory addres
+
 	jsr sound_play_frame ; Play sounds after the time critical drawing
 
-	lda #$00	
+    lda #$00
 	sta sleeping	; clear sleeping flag
 
 	pla
@@ -220,24 +240,6 @@ not_a:
 not_b:
 	rts
 
-drawstuff:
-    lda #$00	;Sprite memory location 0
-    sta $2003
-    
-    lda ypos	;y-1
-    sta $2004
-    lda #$01	; Sprite number
-    sta $2004	;write sprite pattern number
-;    lda #%00000001       ;color bit
-    lda #0       ;Attribute
-    sta $2004
-    lda xpos	; x
-    sta $2004
-    rts
-	  
-
-    
-
 load_palette:
 	lda #$3F
 	sta	$2006
@@ -251,8 +253,6 @@ load_palette:
 	sta	$2006
 	lda #$30
 	sta	$2007
-	
-	
 	rts	
 	
 vwait:
