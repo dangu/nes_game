@@ -33,7 +33,7 @@ class NESSound:
     
     def period2freq(self, p):
         """Convert a given period to frequency"""
-        f = self.cpuFrequency/(16*(p + 1))
+        f = self.cpuFrequency/(16.0*(p + 1))
         return f
     
     def halftoneFactor(self, halftone):
